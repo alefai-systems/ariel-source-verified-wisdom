@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ariel local source-verification demonstration">
+  <title>Ariel: Source-Verified Wisdom</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="masthead">
+      <a class="brand" href="/" aria-label="Ariel home">
+        <span class="brand-mark" aria-hidden="true">א</span>
+        <span>
+          <strong>Ariel</strong>
+          <small>Source-Verified Wisdom</small>
+        </span>
+      </a>
+      <div class="runtime-badge" id="runtime-badge">Checking local runtime…</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="eyebrow">OpenAI Build Week · local prototype</div>
+        <h1 id="page-title">Interpret with a model.<br><span>Quote with evidence.</span></h1>
+        <p class="hero-copy">
+          GPT-5.6 may interpret and select one bounded reference. It cannot provide the final quotation:
+          Ariel rebuilds that text from an immutable registry and releases it only after the deterministic Claim Gate passes.
+        </p>
+      </section>
+
+      <section class="ask-card" aria-labelledby="ask-heading">
+        <div class="card-heading">
+          <div>
+            <p class="step-label">Ask the bounded fixture</p>
+            <h2 id="ask-heading">What would you like to inspect?</h2>
+          </div>
+          <span class="fixture-chip">Synthetic fixture</span>
+        </div>
+
+        <form id="ask-form">
+          <label for="question">Question</label>
+          <textarea id="question" name="question" maxlength="1000" rows="3" required>What appears in the quoted segment of the synthetic Hebrew fixture?</textarea>
+
+          <div class="form-actions">
+            <label class="attack-toggle" for="simulate-tampering">
+              <input id="simulate-tampering" type="checkbox">
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+              <span>
+                <strong>Simulate post-model tampering</strong>
+                <small>The app alters citation evidence after generation; this is not a model attack.</small>
+              </span>
+            </label>
+            <button id="ask-button" type="submit">
+              <span>Ask Ariel</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="result-card" id="result-card" aria-labelledby="result-heading" hidden>
+        <div class="result-topline">
+          <div>
+            <p class="step-label">Result</p>
+            <h2 id="result-heading">Source-verification outcome</h2>
+          </div>
+          <span class="status-pill" id="verification-pill">Waiting</span>
+        </div>
+
+        <div class="result-grid">
+          <article class="result-panel model-panel">
+            <div class="panel-kicker"><span class="panel-dot model-dot"></span>Model interpretation</div>
+            <p id="interpretation">—</p>
+            <div class="model-meta" id="model-meta">—</div>
+          </article>
+
+          <article class="result-panel evidence-panel">
+            <div class="panel-kicker"><span class="panel-dot evidence-dot"></span>Registry quotation</div>
+            <blockquote id="exact-quotation" dir="auto">—</blockquote>
+            <dl class="evidence-list">
+              <div>
+                <dt>Selected reference</dt>
+                <dd id="source-reference">—</dd>
+              </div>
+              <div>
+                <dt>Integrity</dt>
+                <dd id="integrity-result">—</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+
+        <p class="gate-message" id="gate-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="how-it-works" aria-labelledby="flow-heading">
+        <p class="step-label">Trust boundary</p>
+        <h2 id="flow-heading">Four deliberately separate steps</h2>
+        <ol class="flow-list">
+          <li><span>01</span><strong>Interpret</strong><small>The model drafts concise prose.</small></li>
+          <li><span>02</span><strong>Select</strong><small>It chooses one allowed reference token.</small></li>
+          <li><span>03</span><strong>Reconstruct</strong><small>The server slices immutable UTF-8 bytes.</small></li>
+          <li><span>04</span><strong>Verify</strong><small>Claim Gate checks identity, hash, range, and exact text.</small></li>
+        </ol>
+      </section>
+
+      <aside class="truth-note">
+        <strong>What “verified” means here</strong>
+        <p>Exact source identity, integrity, range, and quotation are verified. Semantic entailment and authoritative provenance are intentionally out of scope for this first synthetic demo.</p>
+      </aside>
+    </main>
+
+    <footer>
+      <span>Ariel · local-only engineering demonstration</span>
+      <span>No source upload · no browser-held API key</span>
+    </footer>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Loop Engineering foundation
 
-Status: executable prototype checkpoint. The original empty-workspace evidence from the first 2026-07-17 checkpoint is retained below.
+Status: deterministic source-verifier baseline plus an isolated local Ariel demo on the `feature/gpt-5.6-ariel-demo` branch. The original empty-workspace evidence from the first 2026-07-17 checkpoint is retained below.
 
 ## Observed repository state
 
@@ -53,6 +53,21 @@ Validation on Node.js `v24.12.0` after independent review and correction:
 - `node --test`: 51 reported tests, 51 passed, 0 failed.
 - `node .\cli\demo.js`: exit 0; Hebrew registration/retrieval and SHA-256 verification passed, while tampered quotation, unknown source, and unsupported claim were rejected with the expected codes.
 - Independent reviewer verdict: accept, with all 20 task-mandated automated cases directly covered.
+
+## Local Ariel demonstration
+
+An explicitly authorized Build Week slice now lives at `prototype/ariel-demo`. It imports the existing verifier public API and the exact synthetic Hebrew/Unicode fixture without changing any file under `prototype/source-verification`.
+
+The demo is a standard-library-only CommonJS application with these boundaries:
+
+- A loopback-only HTTP server serves an allowlisted static UI and bounded JSON endpoints.
+- Fake mode is the default and cannot make an external request.
+- Optional live mode uses native `fetch` with the OpenAI Responses API, default model `gpt-5.6-sol`, strict `text.format` Structured Outputs, `store: false`, `reasoning.effort: low`, and a 500-token output bound.
+- The model returns only an interpretation, support status, and one opaque manifest reference token. It cannot return the accepted quote, range, hash, path, endpoint, model name, or credential.
+- The server resolves the token to a pinned source/version/hash and predefined UTF-8 range, reconstructs exact text from the immutable registry, and publishes only successful Claim Gate evidence.
+- A labeled post-model tampering simulation proves that changed quotation evidence is blocked without claiming the model performed the attack.
+
+Offline implementation validation on 2026-07-21 reported 29 demo tests passed and 0 failed, plus a passing fake-model HTTP demonstration and browser checks of both verified and blocked states. No live request ran because `OPENAI_API_KEY` was absent. Semantic entailment and authoritative provenance remain explicit non-goals.
 
 ## Purpose
 
@@ -193,25 +208,25 @@ Reviewer independence requires access to primary source records, the actual diff
 
 | Severity | Risk or gap | Consequence | Re-entry gate |
 | --- | --- | --- | --- |
-| Critical | The scoped directory began empty and remains non-Git outside the isolated prototype | The intended product checkout and audit history are still absent | Restore product repository contents inside the approved folder when explicitly authorized; do not initialize Git for this prototype |
+| Critical | The intended Ariel product/MVP checkout remains absent; the current Git repository contains only the verified prototypes | There is no product boundary or behavior to integrate with | Restore and map an explicitly authorized product checkout before any MVP integration |
 | Critical | Ariel MVP boundary is unavailable | Its files cannot be named or mechanically protected | Map and record exact protected paths before implementation |
 | High | The source registry is in-memory and ingestion is unauthenticated | SHA-256 proves self-consistency, not source provenance or durability | Define an authenticated durable adapter before production use |
 | High | UTF-8 behavior is implemented only in the isolated Node prototype | Other runtimes may use incompatible offsets or normalization | Require adapter conformance tests before any cross-runtime integration |
 | High | The prototype has a package manifest and test runner but no CI or product validation stack | Automated checks are local only | Integrate only after the product repository and native validation workflow are known |
-| High | No Git checkpoint is available | Current work cannot be preserved or audited through Git | Establish the repository baseline before code or UI changes |
+| High | The Ariel demo feature branch is local and intentionally unpushed during implementation | Remote review and CI do not yet cover this milestone | Push or open review only under a later explicit instruction after the local checkpoint is accepted |
 | Medium | Reviewer may reuse implementer-derived evidence | Independent review becomes circular | Require fresh source resolution and raw outputs |
 
 ## Ordered next implementation steps
 
 Before any production or Ariel integration:
 
-1. Complete the remaining executable conformance cases in `SOURCE_VERIFICATION_TEST_PLAN.md`, especially authoritative byte fixtures, non-BMP boundaries, duplicate occurrences, and property/mutation checks.
-2. When explicitly authorized and the intended product repository is present, re-read repository-local instructions and capture a local Git baseline.
-3. Map entry points, modules, data flow, manifests, validation commands, and the exact Ariel MVP boundary.
-4. Trace real `sourceId` creation, persistence, lookup, source versioning, canonical text ingestion, and quotation extraction.
-5. Reconcile the strict prototype identity rule with observed product semantics; document adapters or migrations rather than silently changing offsets.
-6. Add a durable authenticated source/evidence adapter and integration coverage for fail-closed caller behavior.
-7. Run all repository-defined tests, lint, typecheck, and build after confirming no dev server is running.
-8. Have an independent reviewer reproduce source evidence, inspect the actual change set, and rerun the full validation set.
+1. When an API key is intentionally provided, run the documented one-request live smoke test and record only sanitized results.
+2. Complete the remaining executable conformance cases in `SOURCE_VERIFICATION_TEST_PLAN.md`, especially authoritative byte fixtures, non-BMP boundaries, duplicate occurrences, and property/mutation checks.
+3. Define an authenticated, licensed, versioned source-ingestion boundary before replacing the synthetic fixture.
+4. Add semantic-evaluation coverage before describing model interpretations as entailed by sources.
+5. When explicitly authorized and the intended product repository is present, map entry points, data flow, validation commands, and the exact Ariel MVP boundary.
+6. Reconcile the strict prototype identity rule with observed product semantics; document adapters or migrations rather than silently changing offsets.
+7. Add durable evidence storage, authorization, rate limiting, CI, and fail-closed integration coverage.
+8. Have an independent reviewer reproduce source evidence, inspect the actual change set, and rerun the full validation set before any remote publication.
 
-The standalone prototype was explicitly authorized despite the absent product repository. Do not begin product or Ariel integration while its boundary, source semantics, or native validation stack remains unknown.
+The standalone verifier and local Ariel demo were explicitly authorized despite the absent product repository. Do not begin product/MVP integration while its boundary, source semantics, or native validation stack remains unknown.

@@ -1,135 +1,144 @@
 # Safe checkpoint handoff
 
-Final stop recorded: 2026-07-17 18:37:51 +03:00, Asia/Hebron. This is before the 18:55 implementation cutoff and 19:00 hard stop.
+Checkpoint sealed: 2026-07-21 01:24:13 +03:00, Asia/Hebron.
 
-Work is stopped at a valid executable vertical slice. Do not resume until explicitly instructed.
+Work stops at a complete local Build Week demonstration. Do not resume or begin the next task without an explicit instruction.
 
-## Task objective
+## Objective completed
 
-Create the first small, executable Tree A source-verification loop under `prototype/source-verification` using only plain JavaScript and the Node.js standard library. The slice must register immutable exact sources, verify SHA-256 integrity and UTF-8 byte ranges, validate exact quotations and claim supports, demonstrate Hebrew behavior locally, and fail closed with deterministic structured errors.
+Build the first working local Ariel: Source-Verified Wisdom web demonstration using an optional GPT-5.6 Responses API adapter and the existing deterministic Tree A verifier, while keeping final quotation text outside model control.
 
-## Starting point and boundary
+## Git boundary
 
-- The prior checkpoint contained only `AGENTS.md`, this handoff, and two Loop Engineering documents.
-- The directory had no local `.git`, Ariel MVP, application source, dependency tree, or remote integration.
-- Work remained strictly isolated under `C:\Projects\tree-a`; no internet, installation, Git initialization, deployment, publication, upload, external application, or Ariel access occurred.
-- Only the implementation agent wrote prototype files. Explorer and reviewer work was read-only. The coordinator wrote documentation only after prototype writing and review had ended.
+- Feature branch: `feature/gpt-5.6-ariel-demo`.
+- Verified parent/base: `d32cfb44cd86888c99bbc9a2ee3574c6e795fbc0` on `main` and `origin/main`.
+- The branch was created only after `git fetch origin main` confirmed 0 ahead / 0 behind, a clean tree, the exact required base hash, 51 passing tests, and CLI exit 0.
+- The requested checkpoint is one local commit with message `feat: add GPT-5.6 source-verified Ariel demo`. Its hash is reported in the external handoff because a commit cannot reliably embed its own hash.
+- The feature branch has no upstream and was not pushed. No tag, release, issue, pull request, deployment, or GitHub mutation was created.
 
-## Files created
+## Protected existing implementation
+
+Every file under `prototype/source-verification` remains unchanged from `main`. The demo imports only its public module and exact existing synthetic fixture. The existing 51-test behavior and CLI output remain intact.
+
+No Ariel product MVP was present in this repository, so none was accessed or modified.
+
+## Files added
 
 ```text
-prototype/source-verification/package.json
-prototype/source-verification/README.md
-prototype/source-verification/cli/demo.js
-prototype/source-verification/src/claims.js
-prototype/source-verification/src/constants.js
-prototype/source-verification/src/errors.js
-prototype/source-verification/src/index.js
-prototype/source-verification/src/registry.js
-prototype/source-verification/src/verifier.js
-prototype/source-verification/test/claims.test.js
-prototype/source-verification/test/fixtures.js
-prototype/source-verification/test/registry.test.js
-prototype/source-verification/test/verifier.test.js
+.env.example
+prototype/ariel-demo/package.json
+prototype/ariel-demo/public/app.js
+prototype/ariel-demo/public/index.html
+prototype/ariel-demo/public/styles.css
+prototype/ariel-demo/scripts/fake-demo.js
+prototype/ariel-demo/scripts/live-smoke.js
+prototype/ariel-demo/src/ariel-service.js
+prototype/ariel-demo/src/demo-manifest.js
+prototype/ariel-demo/src/errors.js
+prototype/ariel-demo/src/model-clients.js
+prototype/ariel-demo/src/model-contract.js
+prototype/ariel-demo/src/server.js
+prototype/ariel-demo/test/manifest.test.js
+prototype/ariel-demo/test/model-clients.test.js
+prototype/ariel-demo/test/server.test.js
+prototype/ariel-demo/test/service.test.js
 ```
 
-## Files modified
+## Files updated
 
-- `docs/loop-engineering/FOUNDATION.md`: appended the executable architecture, decisions, validation, current risks, and updated next steps while retaining the initial empty-state evidence.
-- `docs/loop-engineering/SOURCE_VERIFICATION_TEST_PLAN.md`: marked the first slice executable and distinguished implemented coverage from the broader remaining plan.
-- `CHECKPOINT.md`: replaced the prior handoff state with this current exact handoff.
+- `README.md`: implemented architecture, exact Responses API design, setup, tests, live smoke instructions, security, provenance, Build Week context, and limitations.
+- `docs/loop-engineering/FOUNDATION.md`: current local-demo architecture, corrected Git/product risks, validation, and ordered future gates.
+- `CHECKPOINT.md`: this handoff.
 
-`AGENTS.md` was not modified; its SHA-256 remained `2B0F2748AD50FB4790227885237F06B6D3943B8DD4D1D42E6D1F45813B818251`.
+## Architecture and trust boundary
 
-## Architectural decisions
+1. The browser sends only a bounded question and an optional, explicitly labeled tamper-simulation flag to a loopback server.
+2. The default fake client or optional server-side GPT-5.6 client returns a strict structure: interpretation, support status, and at most one opaque `reference_id`.
+3. The schema cannot carry quotation text, ranges, hashes, paths, endpoints, model configuration, or credentials.
+4. The server resolves the token through a frozen manifest pinning `sourceId`, `sourceVersion`, SHA-256, and a predefined UTF-8 byte range.
+5. Exact text is reconstructed from the immutable source registry and submitted to the existing `verifySupportedClaim` gate.
+6. The browser receives `exactQuotation` only from successful verifier evidence. Unsupported, invalid, unavailable, and tampered paths contain no `exactQuotation` property.
 
-- CommonJS on Node.js `v24.12.0`; package dependencies and development dependencies are both empty.
-- A case-sensitive `sourceId` permanently binds one exact `sourceVersion` and canonical text in this prototype. Re-registering the same tuple is idempotent; reusing the ID for different content or version is rejected.
-- The registry is an immutable persistent value, and snapshots/evidence are frozen.
-- SHA-256 is recomputed over exact UTF-8 bytes during verification.
-- Ranges are zero-based, start-inclusive, end-exclusive UTF-8 byte offsets. Empty ranges are invalid. Unsafe, negative, reversed, out-of-bounds, and multibyte-splitting offsets fail closed.
-- Text is never trimmed, normalized, case-folded, or newline-rewritten.
-- Resolver absence, exceptions, malformed snapshots, or returned identity mismatches produce structured non-leaking failures.
-- A claim needs at least one support, and every declared support must independently verify.
+The primary source is the existing synthetic fixture `synthetic-hebrew-rtl@v1`, pinned to SHA-256 `fcfa677dfcfc2fba40060ed481414634c53f103714a09799397b081b5fa0acbc`. Range `[15, 25)` reconstructs `עֵץ 42?`. It is transparently labeled synthetic test data with no authoritative provenance claim.
 
-## Exact commands and results
+## OpenAI adapter
 
-Commands executed from `C:\Projects\tree-a\prototype\source-verification`:
+- Endpoint: `POST https://api.openai.com/v1/responses`.
+- Default model: `gpt-5.6-sol`; server-side `OPENAI_MODEL` override supported.
+- `store: false`.
+- Strict JSON Schema through `text.format`.
+- Deliberate `reasoning.effort: low` for this bounded, latency-sensitive demo.
+- `max_output_tokens: 500`.
+- Native `fetch`, 20-second abort timeout, no retry, and no external package.
+- Refusals, incomplete responses, HTTP failures, network failures, invalid JSON, ambiguous output blocks, oversized output, and malformed structures all fail closed.
+- `OPENAI_API_KEY` is read only from the server environment, held in a private client field, placed only in the Authorization header, and absent from public runtime configuration, prompts, responses, assets, and logs.
+
+No live request ran because `OPENAI_API_KEY` was absent. All OpenAI tests used injected fetch doubles.
+
+## Exact validation results
+
+Commands from `prototype/source-verification`:
 
 ```powershell
-node --version
 node --test
 node .\cli\demo.js
-rg -n 'require\(|from\s+|import\s+' src test cli
 ```
 
-Scope/document checks executed from `C:\Projects\tree-a` included:
+- Existing suite: 51 tests, 51 passed, 0 failed, exit 0.
+- Existing CLI: exit 0; exact Hebrew retrieval and SHA-256 integrity passed; tampered quotation, unknown source, and unsupported claim were rejected with the expected codes.
+
+Commands from `prototype/ariel-demo`:
 
 ```powershell
-Get-ChildItem -LiteralPath 'C:\Projects\tree-a' -Force -Recurse -File
-Test-Path -LiteralPath 'C:\Projects\tree-a\.git'
-rg -n '^(<<<<<<<|=======|>>>>>>>)' .
+node --test
+node .\scripts\fake-demo.js
 ```
 
-The final PowerShell scope audit also parsed `package.json`, checked the exact expected file list, UTF-8 readability, final newlines, trailing whitespace, balanced Markdown fences, dependency artifacts, reparse points, and the unchanged `AGENTS.md` hash.
-
-| Check | Exact result |
-| --- | --- |
-| Node version | `v24.12.0` |
-| Pre-review test run | 44 reported, 44 passed, 0 failed |
-| Final `node --test` | 51 reported, 51 passed, 0 failed, 0 skipped/cancelled/todo; duration 111.9527 ms |
-| Final CLI | Exit 0; all required success and rejection demonstrations passed |
-| Required automated cases | 20/20 directly covered after correction |
-| Dependencies | 0 runtime, 0 development; no lockfile or `node_modules` |
-| Scope QA | Passed; exactly 17 expected files, no unexpected files, no local `.git`, no reparse points |
-| Documentation QA | Passed; UTF-8 readable, final newlines present, fences balanced, no conflict markers or trailing whitespace |
-| Lint | Not defined; not run and not claimed passing |
-| Typecheck | Not defined; not run and not claimed passing |
-| Build | Not defined; not run and not claimed passing |
-
-Two draft PowerShell audit one-liners had parser/quoting errors before their checks ran; corrected read-only audits completed successfully. No guessed package installation or build command was run.
-
-## CLI demonstration result
-
-```text
-[registration] sourceId=demo-hebrew-rtl sourceVersion=v1 bytes=47
-[retrieval] exact=true text=מקור א: ״עֵץ 42?״ (בדיקה) ‏RTL
-[integrity] PASS sha256=fcfa677dfcfc2fba40060ed481414634c53f103714a09799397b081b5fa0acbc
-[rejection:tampered-quote] PASS code=QUOTATION_MISMATCH
-[rejection:unknown-id] PASS code=UNKNOWN_SOURCE
-[rejection:unsupported-claim] PASS code=UNSUPPORTED_CLAIM
-```
+- Ariel suite: 29 tests, 29 passed, 0 failed, exit 0.
+- Fake HTTP demo: exit 0; `fixture-quoted-segment` verified as `עֵץ 42?`; transparent post-model tampering blocked as `CLAIM_SUPPORT_INVALID` caused by `QUOTATION_MISMATCH`.
+- Browser: desktop and 390px responsive layouts rendered; verified and blocked interactions matched the API results; no console warning/error was present.
+- JavaScript syntax and package JSON audit: passed.
+- `git diff --check`: passed.
+- Final-newline, trailing-whitespace, merge-marker, unexpected-artifact, and common secret-pattern audits: passed.
+- Runtime: Node.js `v24.12.0`, npm `11.11.0`.
+- Dependencies: 0 runtime, 0 development; no lockfile or `node_modules`.
+- Lint: unavailable; no script or configuration exists.
+- Typecheck: unavailable; no script or configuration exists.
+- Build: unavailable; no script or configuration exists.
 
 ## Independent review
 
-The first review returned the slice for correction:
+The final read-only reviewer reopened all files and reran the raw gates. The first verdict was **RETURN** for one P1: origin validation reflected the client-controlled `Host`, allowing a DNS-rebinding authority to match itself and potentially consume a live server key.
 
-- P1: a foreign resolver could return a different source identity and be accepted.
-- P2: throwing or malformed resolvers escaped structured `SOURCE_UNAVAILABLE` behavior.
-- P2: deterministic repeated success, one-character deletion, and added-character cases lacked direct tests.
-- P2/P3: broader provisional cases remained future work and status documentation was stale.
+Correction:
 
-Focused corrections:
+- POST authority validation now requires the actual request socket port and only `127.0.0.1` or `localhost`.
+- Origin, when present, must exactly match that approved authority.
+- Missing Origin remains intentionally supported only with a valid loopback Host for local non-browser clients.
+- A matching non-loopback Host/Origin regression requires HTTP 400 and verifies zero model calls.
 
-- Validate resolver interface, snapshot shape, resolved identity, and caller-bound identity before acceptance.
-- Catch resolver failures without exposing exception text; derive byte length from canonical UTF-8 bytes rather than resolver metadata.
-- Add direct wrong-source, unavailable/malformed resolver, deterministic-success, deletion, and addition regressions.
-- Update the prototype README and Loop Engineering status documentation.
+The targeted independent re-review verdict was **ACCEPT** with 29/29 tests passing, `git diff --check` passing, and no remaining actionable finding.
 
-The final independent reviewer verdict was **accept** at 18:32:22 +03:00, with 51 tests passed, 0 failed, the CLI passing, 20/20 mandatory cases directly covered, and no new actionable finding.
+## Security and truthfulness review
 
-A later documentation seal review found two non-code inconsistencies: the foundation still described `SOURCE_IDENTITY_MISMATCH` as caller-binding-only, and this handoff used the wrong timezone label. Both lines were corrected; no implementation or test change was required.
+- Model-selected references are schema-enumerated opaque tokens; invalid cross-products cannot be supplied.
+- Manifest identity, version, hash, and ranges are server-held and pinned.
+- Final quote publication is exclusively verifier-evidence-derived.
+- A model-supplied `quotation` property invalidates the whole response.
+- Unknown source, invalid range, altered source, tampered quote, malformed model output, and unsupported claim tests all fail closed without a quotation.
+- Browser rendering uses `textContent`, restrictive CSP headers, no permissive CORS, bounded JSON, allowlisted routes, and loopback Host/Origin validation.
+- Sentinel tests prove server key absence from status, success/error response bodies, HTML, JavaScript, and public runtime configuration.
+- The UI and documentation distinguish model interpretation from exact source verification and explicitly state that semantic entailment and source authority are not proven.
 
 ## Remaining limitations
 
-- Registry and evidence are in-memory and synchronous; there is no durable or authenticated ingestion/storage adapter.
-- SHA-256 proves byte consistency, not source authority or provenance.
-- Semantic entailment between a claim and a quotation is not evaluated; this slice proves declared exact source support only.
-- The broader test plan still needs authoritative hex-fixture loading, non-BMP and duplicate-occurrence cases, property/mutation or fuzz tests, state transitions, persistence/restart tests, and CI.
-- There is no product repository, Ariel boundary, Git audit history, concurrency model, authorization layer, or production integration.
+- The only source is synthetic application test data.
+- SHA-256 proves byte consistency, not authority, licensing, provenance, truth, or semantic entailment.
+- The live adapter is implemented and mocked but not exercised against OpenAI in this checkpoint.
+- Registry and evidence are in-memory; there is no durable/authenticated ingestion or storage.
+- There is no authentication, authorization, rate limiting, CI, telemetry, deployment configuration, or production integration.
+- The demo deliberately supports one citation per answer and three predefined ranges.
 
-## Exact next recommended implementation step
+## Safest next task
 
-Implement the remaining executable conformance suite from `docs/loop-engineering/SOURCE_VERIFICATION_TEST_PLAN.md`—authoritative byte fixtures, non-BMP boundaries, duplicate occurrences, and deterministic property/mutation tests—against the current pure verifier before adding persistence or any Ariel/product integration.
-
-This checkpoint is sealed. All active implementation work stopped before 18:55, and no work will resume until explicitly instructed.
+When explicitly instructed and a key is intentionally present, run the documented single live smoke command, inspect only sanitized output, and record the result without changing the verifier contract. Do not deploy or begin product/MVP integration. After live compatibility is confirmed, the next engineering milestone should define an authenticated, licensed, versioned real-source ingestion boundary plus semantic-evaluation coverage.

@@ -1,0 +1,15 @@
+{
+  "name": "ariel-source-verified-wisdom-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local GPT-5.6 interpretation demo with deterministic source verification.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "demo": "node scripts/fake-demo.js",
+    "smoke:live": "node scripts/live-smoke.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
