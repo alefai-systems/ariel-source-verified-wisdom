@@ -1,0 +1,13 @@
+{
+  "name": "tree-a-source-verification-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standard-library-only vertical slice for exact source quotation verification.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "demo": "node cli/demo.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
