@@ -1,26 +1,26 @@
 # Ariel: Source-Verified Wisdom
 
-Ariel is a local demonstration of a narrow trust rule: a language model may interpret a source and select a bounded reference, but it must not control the quotation ultimately shown to a user. The final quotation is reconstructed from immutable registered text and released only after deterministic identity, integrity, UTF-8 range, and exact-text checks pass.
+Ariel is a local demonstration of one narrow trust rule: a language model may interpret pinned source material and select an allowed reference, but it must not control the quotation ultimately shown to a user. The final quotation is reconstructed from immutable registered text and released only after deterministic source identity, SHA-256, UTF-8 range, and exact-text checks pass.
 
-This repository is an OpenAI Build Week prototype. It is not deployed and does not contain an Ariel production MVP.
+This repository is an OpenAI Build Week prototype. It is not deployed and does not contain a production Ariel MVP.
 
 ## What is implemented
 
-Two isolated, dependency-free Node.js prototypes now work together:
+Two dependency-free Node.js prototypes work together:
 
-- `prototype/source-verification`: the existing deterministic registry, exact quotation verifier, and Claim Gate. Its original behavior and 51-test suite remain unchanged.
-- `prototype/ariel-demo`: a loopback-only web UI, fake model, optional GPT-5.6 Responses API adapter, bounded reference manifest, post-model attack simulation, and offline integration/security tests.
+- `prototype/source-verification`: the existing immutable registry, exact quotation verifier, and Claim Gate. Its behavior and 51-test suite remain unchanged.
+- `prototype/ariel-demo`: a loopback-only web UI, deterministic fake model, optional GPT-5.6 Responses API adapter, pinned JPS 1917 corpus, opaque reference manifest, transparent post-model attack simulation, and offline contract/security tests.
 
-The local demo provides:
+The Ariel demo provides:
 
-- A question form and clear separation between model interpretation and registry quotation.
+- Two pinned English sources from **The Holy Scriptures: A New Translation (JPS 1917)**, returned by Sefaria with license **Public Domain**.
+- One registered multi-segment source for Psalms 85:10-14, with Psalm 85:12 derived programmatically as the primary quotation range.
+- Proverbs 12:19 as a second bounded source.
 - An offline fake-model mode enabled by default.
 - An optional server-side OpenAI adapter targeting `gpt-5.6-sol`, overridable with `OPENAI_MODEL`.
-- Strict Structured Outputs through `text.format`.
-- A pinned manifest with three allowed references into the existing synthetic Hebrew/Unicode fixture.
-- Exact quote reconstruction from immutable registry bytes, followed by the existing `verifySupportedClaim` gate.
+- Strict Structured Outputs through `text.format`, with only interpretation, support status, and one enum-bounded opaque reference token.
+- Exact quotation reconstruction from immutable registry bytes followed by the existing `verifySupportedClaim` gate.
 - A transparent simulation that alters quotation evidence after model generation and demonstrates a deterministic block.
-- Fail-closed handling for missing configuration, transport errors, HTTP errors, timeouts, refusals, incomplete responses, malformed JSON, invalid model shapes, unknown references, invalid ranges, integrity failures, and unsupported claims.
 
 ## Trust architecture
 
@@ -28,8 +28,9 @@ The local demo provides:
 Browser question
   -> loopback-only Node server
   -> fake client OR GPT-5.6 Responses API
+  -> require response.status === "completed"
   -> strict model-output validation
-  -> opaque reference token lookup in a server-held manifest
+  -> opaque reference-token lookup in a server-held manifest
   -> exact UTF-8 quotation reconstruction from the immutable registry
   -> existing deterministic verifySupportedClaim()
   -> publish verifier evidence, or block without a quotation
@@ -37,50 +38,106 @@ Browser question
 
 | Boundary | Responsibility |
 | --- | --- |
-| Browser | Sends only a bounded question and the explicit tamper-simulation flag; renders model text with `textContent` |
+| Browser | Sends only a bounded question and explicit tamper-simulation flag; renders text with `textContent` |
 | Model client | Returns an interpretation, support status, and at most one schema-enumerated `reference_id` |
-| Server manifest | Maps each opaque token to pinned source identity, version, SHA-256, and a predefined UTF-8 byte range |
-| Immutable registry | Preserves the exact canonical source text used for reconstruction |
-| Claim Gate | Independently checks source identity/version, pinned integrity, range validity, UTF-8 boundaries, and exact quotation equality |
+| Server manifest | Maps `jps-source-a` or `jps-source-b` to a pinned source identity, content-addressed version, SHA-256, and predefined UTF-8 byte range |
+| Immutable registry | Preserves the final canonical source text used for quotation reconstruction |
+| Claim Gate | Checks source identity/version, pinned integrity, range validity, UTF-8 boundaries, and exact quotation equality |
 
-The model schema has no quotation, offset, hash, path, endpoint, model-name, or credential field. On success, `exactQuotation` is copied only from `verifySupportedClaim(...).claim.supports[0].extractedText`. Failed and unsupported results contain no `exactQuotation` property.
+The model schema has no quotation, offset, hash, source metadata, URL, endpoint, model-name, or credential field. The model receives excerpt context paired with opaque tokens but never controls their server-side identity/range mapping. On success, `exactQuotation` is copied only from `verifySupportedClaim(...).claim.supports[0].extractedText`. Failed and unsupported results contain no `exactQuotation` property.
 
-## Demo source and provenance
+## Pinned JPS 1917 source corpus
 
-The demo directly imports the existing test fixture rather than creating a new source:
+Only these Sefaria Texts v3 endpoints were requested:
+
+1. [Psalms 85:10-14, exact JPS 1917 version](https://www.sefaria.org/api/v3/texts/Psalms.85.10-14?version=english%7CThe%20Holy%20Scriptures%3A%20A%20New%20Translation%20%28JPS%201917%29&return_format=text_only&fill_in_missing_segments=0)
+2. [Proverbs 12:19, exact JPS 1917 version](https://www.sefaria.org/api/v3/texts/Proverbs.12.19?version=english%7CThe%20Holy%20Scriptures%3A%20A%20New%20Translation%20%28JPS%201917%29&return_format=text_only&fill_in_missing_segments=0)
+
+Both requests explicitly used:
 
 ```text
-sourceId: synthetic-hebrew-rtl
-sourceVersion: v1
-canonical text: מקור א: ״עֵץ 42?״ (בדיקה) ‏RTL
-SHA-256: fcfa677dfcfc2fba40060ed481414634c53f103714a09799397b081b5fa0acbc
+version=english|The Holy Scriptures: A New Translation (JPS 1917)
+return_format=text_only
+fill_in_missing_segments=0
 ```
 
-The primary demo reference uses zero-based, end-exclusive UTF-8 bytes `[15, 25)` and reconstructs `עֵץ 42?`. This is synthetic application test data, not a biblical quotation or an authoritative wisdom source. Its provenance is intentionally described no more strongly than the repository evidence supports.
+Each response selected exactly one version with:
+
+```text
+versionTitle: The Holy Scriptures: A New Translation (JPS 1917)
+language: en
+actualLanguage: en
+license: Public Domain
+status: locked
+warnings: []
+```
+
+Psalms returned exactly five non-empty segments and Proverbs returned one non-empty string. No default English version, Revised JPS 2023 text, missing segment, warning, reference substitution, or license substitution was accepted.
+
+Attribution shown by the demo:
+
+> Text: The Holy Scriptures: A New Translation (JPS 1917), Public Domain. Digital text via Sefaria.
+
+Sefaria provides the digital text and edition metadata; it does not verify Ariel's model interpretation. SHA-256 detects changes to the pinned bytes; it does not prove source authority or semantic truth.
+
+### Canonicalization
+
+The deterministic `ariel-sefaria-text-v1` pipeline is:
+
+1. Decode HTML entities.
+2. Replace `br` elements and line breaks with a single space.
+3. Remove remaining HTML tags.
+4. Normalize Unicode to NFC.
+5. Trim leading and trailing whitespace.
+6. Collapse internal whitespace to one space.
+7. Preserve capitalization and punctuation exactly.
+8. Encode the final canonical text as UTF-8.
+9. Calculate SHA-256 over those final stored UTF-8 bytes.
+
+Each API segment is canonicalized independently. Multi-segment sources retain API order and join segments with one ASCII space (`U+0020`). The audited selected text required no textual change, but the pipeline and HTML/entity/NFC/break behavior are covered by deterministic tests.
+
+### Stored metadata and ranges
+
+Retrieval checkpoint: `2026-07-21T04:51:44.8906045+03:00`.
+
+| Registered source | Metadata |
+| --- | --- |
+| `jps-1917-psalms-85-10-14` | Reference `Psalms 85:10-14`; content-addressed version `sha256:0391d235…54a312`; 399 UTF-8 bytes; SHA-256 `0391d2350d08cac6bb8e535451f59f4606e132782c94b41799ca83e8da54a312` |
+| `jps-1917-proverbs-12-19` | Reference `Proverbs 12:19`; content-addressed version `sha256:1c577e59…f70ed4`; 87 UTF-8 bytes; SHA-256 `1c577e59924bcad0b8b2b06016abc12d9e9ff3b841c463a1698ea551bdf70ed4` |
+
+Psalms segment ranges are derived by accumulating UTF-8 byte lengths plus one joining-space byte; offsets are zero-based and end-exclusive:
+
+| Segment | Range |
+| --- | --- |
+| Psalms 85:10 | `[0, 82)` |
+| Psalms 85:11 | `[83, 164)` |
+| Psalms 85:12 | `[165, 246)` |
+| Psalms 85:13 | `[247, 328)` |
+| Psalms 85:14 | `[329, 399)` |
+
+The primary verified quotation is Psalms 85:12, with alternate display reference **Psalm 85:11 (common Christian/KJV numbering)**:
+
+> Truth springeth out of the earth; And righteousness hath looked down from heaven.
+
+Proverbs 12:19 uses `[0, 87)`:
+
+> The lip of truth shall be established for ever; But a lying tongue is but for a moment.
+
+The committed source snapshot preserves `sourceId`, reference and applicable alternate reference, version title, language, license and license note, provider, exact endpoint, retrieval checkpoint, normalization contract, SHA-256, and all segment references/ranges.
 
 ## OpenAI Responses API design
 
-Live mode performs one server-side `POST https://api.openai.com/v1/responses` using native `fetch`. The key is read only from `OPENAI_API_KEY` and placed only in the `Authorization` header. The request body has this exact structure:
+Live mode performs one server-side `POST https://api.openai.com/v1/responses` using native `fetch`. The key is read only from `OPENAI_API_KEY` and placed only in the `Authorization` header. The relevant request fields are:
 
 ```json
 {
   "model": "gpt-5.6-sol",
   "store": false,
   "reasoning": { "effort": "low" },
-  "max_output_tokens": 500,
+  "max_output_tokens": 2000,
   "input": [
-    {
-      "role": "developer",
-      "content": [
-        { "type": "input_text", "text": "<bounded instructions plus verified manifest>" }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        { "type": "input_text", "text": "<bounded user question>" }
-      ]
-    }
+    { "role": "developer", "content": [{ "type": "input_text", "text": "<bounded instructions and excerpt manifest>" }] },
+    { "role": "user", "content": [{ "type": "input_text", "text": "<bounded question>" }] }
   ],
   "text": {
     "format": {
@@ -98,14 +155,7 @@ Live mode performs one server-side `POST https://api.openai.com/v1/responses` us
             "items": {
               "type": "object",
               "properties": {
-                "reference_id": {
-                  "type": "string",
-                  "enum": [
-                    "fixture-quoted-segment",
-                    "fixture-rtl-suffix",
-                    "fixture-full-source"
-                  ]
-                }
+                "reference_id": { "type": "string", "enum": ["jps-source-a", "jps-source-b"] }
               },
               "required": ["reference_id"],
               "additionalProperties": false
@@ -120,15 +170,15 @@ Live mode performs one server-side `POST https://api.openai.com/v1/responses` us
 }
 ```
 
-`low` reasoning effort is deliberate for this small, latency-sensitive selection task. Output is bounded to 500 tokens. The adapter uses a 20-second timeout, performs no automatic retry, rejects partial or ambiguous output, and never repairs code-fenced or malformed JSON. Official design references: [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-5.6), [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs), and the [Responses create reference](https://developers.openai.com/api/reference/resources/responses/methods/create).
+The adapter requires `response.status === "completed"` before parsing any output. For `status: "incomplete"`, it fails with `MODEL_INCOMPLETE` and preserves only the exact `incomplete_details.reason`; the live-smoke CLI renders that value with `JSON.stringify` to avoid log injection. Every other non-completed status fails closed. The adapter uses a 20-second timeout, makes no automatic retry, and rejects refusals, partial output, ambiguous blocks, oversized output, code fences, invalid JSON, and extra schema fields.
 
 ## Prerequisites and installation
 
-The verified environment uses Node.js `v24.12.0`. Both packages use only Node.js built-ins and native `fetch`.
+The verified environment uses Node.js `v24.12.0` and npm `11.11.0`. Both packages use only Node.js built-ins and native `fetch`.
 
 There is no dependency installation step. Do not run `npm install`.
 
-`.env.example` documents supported variables, but the application deliberately does not load `.env` files. Set variables in the server process environment.
+`.env.example` documents supported variables, but the application does not load `.env` files. Set variables only in the server process environment.
 
 ## Run the local web demo
 
@@ -139,27 +189,15 @@ cd C:\Projects\tree-a\prototype\ariel-demo
 node .\src\server.js
 ```
 
-Open `http://127.0.0.1:3000`. Check **Simulate post-model tampering** to see the application alter evidence after the fake model returns and the Claim Gate block it. This is explicitly an application-injected test, not a claim that the model attacked its citation.
-
-Equivalent package command:
-
-```powershell
-npm start
-```
+Open `http://127.0.0.1:3000`. Check **Simulate post-model tampering** to see application-injected evidence alteration blocked by Claim Gate. The model does not perform that simulated attack.
 
 ## Run all offline verification
-
-Existing deterministic verifier:
 
 ```powershell
 cd C:\Projects\tree-a\prototype\source-verification
 node --test
 node .\cli\demo.js
-```
 
-New Ariel demo:
-
-```powershell
 cd C:\Projects\tree-a\prototype\ariel-demo
 node --test
 node .\scripts\fake-demo.js
@@ -169,64 +207,52 @@ No lint, typecheck, or build script is defined in either package. Those checks a
 
 ## Optional live smoke test
 
-Run a live request only when you intentionally provide a key. The following PowerShell commands keep it in the current process environment and remove it afterward:
+The live smoke was deliberately not run in this checkpoint. When separately authorized, keep the key process-local:
 
 ```powershell
 cd C:\Projects\tree-a\prototype\ariel-demo
 $env:OPENAI_API_KEY = Read-Host "OpenAI API key" -MaskInput
 $env:OPENAI_MODEL = "gpt-5.6-sol"
-node .\scripts\live-smoke.js
-Remove-Item Env:OPENAI_API_KEY
-Remove-Item Env:OPENAI_MODEL
+try {
+  node .\scripts\live-smoke.js
+}
+finally {
+  Remove-Item Env:OPENAI_API_KEY
+  Remove-Item Env:OPENAI_MODEL
+}
 ```
 
-To run the browser demo in live mode instead:
-
-```powershell
-cd C:\Projects\tree-a\prototype\ariel-demo
-$env:OPENAI_API_KEY = Read-Host "OpenAI API key" -MaskInput
-$env:OPENAI_MODEL = "gpt-5.6-sol"
-$env:ARIEL_MODEL_PROVIDER = "openai"
-node .\src\server.js
-```
-
-Stop the server, then remove the three environment variables. The browser cannot select fake/live mode, model, endpoint, or credentials.
+The command succeeds only for an accepted Claim Gate result backed by an OpenAI response whose status is exactly `completed`. An incomplete response exits nonzero and reports `incomplete_details.reason` exactly.
 
 ## Current verified results
 
-Verified locally on 2026-07-21 without an API key:
+Verified locally on 2026-07-21 without an OpenAI request:
 
-- Existing verifier: 51 tests passed, 0 failed.
-- Existing CLI: exit code 0 with exact Hebrew retrieval/integrity success and all documented rejection demonstrations passing.
-- Ariel demo: 29 tests passed, 0 failed.
-- Offline fake-model HTTP demo: verified `fixture-quoted-segment` as `עֵץ 42?`; post-model tampering was blocked as `CLAIM_SUPPORT_INVALID` caused by `QUOTATION_MISMATCH`.
-- Browser check: fake runtime loaded with no console errors; desktop and 390px layouts rendered; verified and blocked interactions both behaved as documented.
-- Live smoke test: not run because `OPENAI_API_KEY` was absent.
-- External runtime and development dependencies: 0.
+- Existing source verifier: 51 tests passed, 0 failed.
+- Existing source-verifier CLI: exit 0 with all documented success/rejection demonstrations passing.
+- Ariel demo: 43 tests passed, 0 failed.
+- Fake-model HTTP demo: both Psalm 85:12 and Proverbs 12:19 verified; post-model tampering blocked as `CLAIM_SUPPORT_INVALID` caused by `QUOTATION_MISMATCH`.
+- Browser: desktop and 390px layouts rendered without horizontal overflow; verified and blocked paths displayed the required metadata; no console warning/error was present.
+- Independent Sefaria provenance reproduction: passed for version, language, license, reference, completeness, canonical text, ranges, and hashes.
+- OpenAI live smoke: not run, as explicitly required.
+- Runtime and development dependencies: 0.
 
-## Security properties
+## Security and truthfulness properties
 
-- The server binds to `127.0.0.1` and serves only three allowlisted static routes plus two JSON endpoints.
-- Live/fake mode, model, endpoint, and API key are startup configuration, never browser-controlled input.
-- The API key is held in a private server field, never added to a prompt, response, static asset, or log.
-- JSON requests and model output are byte-bounded. Browser request keys and model response keys are allowlisted.
-- POST requests must name the actual loopback socket and port; cross-origin and matching non-loopback Host/Origin requests are rejected, and no permissive CORS header is emitted.
-- Responses include a restrictive Content Security Policy and are always `no-store`.
-- Upstream errors, bodies, exception messages, stacks, headers, and refusal text are not returned to the browser.
-- A sentinel-key integration test checks successful responses, error responses, status JSON, HTML, and JavaScript for credential leakage.
-
-## How OpenAI Codex was used
-
-OpenAI Codex inspected the verified repository baseline, read the existing verifier and all tests, checked current official OpenAI API guidance, created the isolated feature branch, implemented the add-only demo, wrote offline contract/security tests, and exercised the real local UI. Separate read-only agents reviewed the architecture and API/security boundary. The final independent reviewer returned one loopback Host-validation issue; after correction and a DNS-rebinding regression, the reviewer accepted the checkpoint.
+- The server binds to `127.0.0.1` and serves only allowlisted static routes and JSON endpoints.
+- Live/fake mode, model, endpoint, and API key are server startup configuration, never browser-controlled input.
+- The API key is held in a private server field and never added to prompts, responses, assets, or logs.
+- The source snapshot fails closed on version selector, title, language, license, endpoint, reference, segment order/completeness, warning, or byte/hash drift.
+- Model output keys and reference tokens are allowlisted; source metadata cannot be supplied by the model.
+- POST requests must name the actual loopback socket and port; cross-origin and matching non-loopback Host/Origin requests are rejected.
+- Responses use a restrictive Content Security Policy and `no-store`.
+- Upstream bodies, exception messages, stacks, headers, and refusal text are not returned to the browser.
+- The UI and documentation distinguish model interpretation, Sefaria-provided metadata, byte integrity, and semantic/source authority.
 
 ## Repository structure
 
 ```text
 tree-a/
-├── .env.example
-├── .gitattributes
-├── .gitignore
-├── AGENTS.md
 ├── CHECKPOINT.md
 ├── README.md
 ├── docs/loop-engineering/
@@ -235,7 +261,7 @@ tree-a/
 │   ├── src/
 │   └── test/
 └── prototype/ariel-demo/
-    ├── package.json
+    ├── data/jps-1917-snapshot.json
     ├── public/
     ├── scripts/
     ├── src/
@@ -244,19 +270,19 @@ tree-a/
 
 ## OpenAI Build Week context
 
-This milestone creates a small, demonstrable vertical slice for Build Week: model interpretation is useful but visibly separated from deterministic source evidence. The safest next product path is to replace the synthetic fixture with an authenticated, licensed, versioned source ingestion adapter and add semantic-evaluation coverage before any production or public deployment work.
+This milestone replaces the synthetic demo fixture with a small, reproducible public-domain source corpus while preserving the trust boundary between model interpretation and deterministic quotation. It remains a demonstration, not a source-authority, legal-determination, or semantic-entailment system.
 
 ## Known limitations
 
-- The only source is synthetic test data with no claim to external authority, licensing, or provenance.
-- SHA-256 and exact range verification prove byte consistency, not source authority or truth.
-- The Claim Gate verifies declared exact support but does not determine whether model prose is semantically entailed by that quotation.
-- Sources, evidence, and requests are in-memory and synchronous apart from the model request; nothing is persisted across restarts.
-- There is no authentication, authorization, durable source store, ingestion pipeline, rate limiting, CI, telemetry, deployment configuration, or production adapter.
-- The live OpenAI code path is implemented and fully mocked in tests, but it has not been exercised against the API in this checkpoint because no key was present.
-- The demo deliberately supports one citation per answer and three predefined ranges from one fixture.
-- No Ariel product MVP was present to integrate with or modify.
+- The corpus contains only two predefined quotation options from one retrieved JPS 1917 snapshot.
+- The source snapshot was manually pinned from verified Sefaria API responses; there is no authenticated or durable ingestion pipeline.
+- SHA-256 proves consistency with the locally pinned bytes, not authority, continuing upstream availability, legal advice, truth, or semantic entailment.
+- Sefaria provides text and version/license metadata but does not verify the model interpretation.
+- Sources and evidence are in-memory; nothing is persisted across restarts.
+- There is no authentication, authorization, rate limiting, CI, telemetry, deployment configuration, or production adapter.
+- The live OpenAI path is fully mocked in tests but has not been exercised against the API in this checkpoint.
+- The demo supports one citation per answer and does not implement semantic entailment.
 
 ## License status
 
-No license has been selected or added. Do not assume that this repository grants permission to use, modify, or redistribute its contents.
+The two stored JPS 1917 source passages are recorded by Sefaria as **Public Domain**. No license has been selected or added for the repository's code and documentation; do not assume the repository itself grants permission to use, modify, or redistribute them.

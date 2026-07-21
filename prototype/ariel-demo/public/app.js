@@ -11,6 +11,10 @@ const interpretation = document.querySelector('#interpretation');
 const modelMeta = document.querySelector('#model-meta');
 const exactQuotation = document.querySelector('#exact-quotation');
 const sourceReference = document.querySelector('#source-reference');
+const alternateReference = document.querySelector('#alternate-reference');
+const versionTitle = document.querySelector('#version-title');
+const sourceLicense = document.querySelector('#source-license');
+const sourceProvider = document.querySelector('#source-provider');
 const integrityResult = document.querySelector('#integrity-result');
 const gateMessage = document.querySelector('#gate-message');
 
@@ -26,7 +30,17 @@ function formatReference(reference) {
     return 'No reference released';
   }
   const range = reference.range;
-  return `${reference.sourceId}@${reference.sourceVersion} · ${reference.referenceId} · [${range.start}, ${range.end}) ${range.offsetUnit}`;
+  return `${reference.reference} · [${range.start}, ${range.end}) ${range.offsetUnit}`;
+}
+
+function renderReferenceMetadata(reference) {
+  sourceReference.textContent = formatReference(reference);
+  alternateReference.textContent = reference && reference.altReference
+    ? reference.altReference
+    : reference ? 'Not applicable' : 'No reference released';
+  versionTitle.textContent = reference ? reference.versionTitle : 'No version released';
+  sourceLicense.textContent = reference ? reference.license : 'No license released';
+  sourceProvider.textContent = reference ? reference.provider : 'No provider released';
 }
 
 function renderResult(result) {
@@ -36,7 +50,8 @@ function renderResult(result) {
   verificationPill.textContent = state === 'verified' ? 'Verified' : state === 'blocked' ? 'Blocked' : 'Error';
 
   if (result.model) {
-    modelMeta.textContent = `${result.model.provider} · ${result.model.model}`;
+    const status = result.model.responseStatus ? ` · ${result.model.responseStatus}` : '';
+    modelMeta.textContent = `${result.model.provider} · ${result.model.model}${status}`;
   } else {
     modelMeta.textContent = 'No model output accepted';
   }
@@ -44,13 +59,13 @@ function renderResult(result) {
   if (result.ok) {
     interpretation.textContent = result.interpretation;
     exactQuotation.textContent = result.exactQuotation;
-    sourceReference.textContent = formatReference(result.sourceReference);
+    renderReferenceMetadata(result.sourceReference);
     integrityResult.textContent = `${result.verification.integrity.hashAlgorithm} PASS · ${result.verification.integrity.contentHash}`;
     gateMessage.textContent = `${result.provenance} ${result.limitation}`;
   } else if (result.outcome === 'blocked') {
     interpretation.textContent = 'Withheld because the deterministic Claim Gate did not accept the declared support.';
     exactQuotation.textContent = 'No quotation released';
-    sourceReference.textContent = formatReference(result.sourceReference);
+    renderReferenceMetadata(result.sourceReference);
     const cause = result.verification.causeCode ? ` · cause ${result.verification.causeCode}` : '';
     integrityResult.textContent = `${result.verification.code}${cause}`;
     gateMessage.textContent = result.verification.simulatedTampering
@@ -59,7 +74,7 @@ function renderResult(result) {
   } else {
     interpretation.textContent = 'No model interpretation was accepted.';
     exactQuotation.textContent = 'No quotation released';
-    sourceReference.textContent = 'No reference released';
+    renderReferenceMetadata(null);
     integrityResult.textContent = result.error ? result.error.code : 'UNKNOWN_ERROR';
     gateMessage.textContent = result.error ? result.error.message : 'The request failed closed.';
   }

@@ -1,0 +1,58 @@
+{
+  "snapshotVersion": 1,
+  "retrievedAt": "2026-07-21T04:51:44.8906045+03:00",
+  "versionSelector": "english|The Holy Scriptures: A New Translation (JPS 1917)",
+  "versionTitle": "The Holy Scriptures: A New Translation (JPS 1917)",
+  "language": "en",
+  "license": "Public Domain",
+  "licenseNote": "This 1917 translation by the Jewish Publication Society is in the public domain. JPS graciously shared digital images of this text with the Open Siddur Project, from which the text was imported by Sefaria.",
+  "provider": "Sefaria",
+  "attribution": "Text: The Holy Scriptures: A New Translation (JPS 1917), Public Domain. Digital text via Sefaria.",
+  "sources": [
+    {
+      "sourceId": "jps-1917-psalms-85-10-14",
+      "reference": "Psalms 85:10-14",
+      "sourceUrl": "https://www.sefaria.org/api/v3/texts/Psalms.85.10-14?version=english%7CThe%20Holy%20Scriptures%3A%20A%20New%20Translation%20%28JPS%201917%29&return_format=text_only&fill_in_missing_segments=0",
+      "expectedSha256": "0391d2350d08cac6bb8e535451f59f4606e132782c94b41799ca83e8da54a312",
+      "responseReference": "Psalms 85:10-14",
+      "warnings": [],
+      "segments": [
+        {
+          "reference": "Psalms 85:10",
+          "text": "Surely His salvation is nigh them that fear Him; That glory may dwell in our land."
+        },
+        {
+          "reference": "Psalms 85:11",
+          "text": "Mercy and truth are met together; Righteousness and peace have kissed each other."
+        },
+        {
+          "reference": "Psalms 85:12",
+          "altReference": "Psalm 85:11 (common Christian/KJV numbering)",
+          "text": "Truth springeth out of the earth; And righteousness hath looked down from heaven."
+        },
+        {
+          "reference": "Psalms 85:13",
+          "text": "Yea, the LORD will give that which is good; And our land shall yield her produce."
+        },
+        {
+          "reference": "Psalms 85:14",
+          "text": "Righteousness shall go before Him, And shall make His footsteps a way."
+        }
+      ]
+    },
+    {
+      "sourceId": "jps-1917-proverbs-12-19",
+      "reference": "Proverbs 12:19",
+      "sourceUrl": "https://www.sefaria.org/api/v3/texts/Proverbs.12.19?version=english%7CThe%20Holy%20Scriptures%3A%20A%20New%20Translation%20%28JPS%201917%29&return_format=text_only&fill_in_missing_segments=0",
+      "expectedSha256": "1c577e59924bcad0b8b2b06016abc12d9e9ff3b841c463a1698ea551bdf70ed4",
+      "responseReference": "Proverbs 12:19",
+      "warnings": [],
+      "segments": [
+        {
+          "reference": "Proverbs 12:19",
+          "text": "The lip of truth shall be established for ever; But a lying tongue is but for a moment."
+        }
+      ]
+    }
+  ]
+}

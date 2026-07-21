@@ -55,11 +55,12 @@ test('server exposes only safe local runtime metadata and static UI', async () =
       provider: 'fake',
       model: 'deterministic-fake',
       liveConfigured: false,
-      sourceCount: 1,
-      referenceCount: 3,
+      sourceCount: 2,
+      referenceCount: 2,
     });
     assert.equal(pageResponse.status, 200);
     assert.match(page, /Ariel: Source-Verified Wisdom/u);
+    assert.match(page, /JPS 1917/u);
     assert.match(pageResponse.headers.get('content-security-policy'), /default-src 'self'/u);
   });
 });
@@ -69,19 +70,29 @@ test('HTTP verified path and transparent attack path both fail or publish as des
 
   await withServer(service, async (baseUrl) => {
     const verifiedResponse = await post(baseUrl, {
-      question: 'What appears in the quoted segment?',
+      question: 'What does it mean for truth to spring from the earth?',
       simulateTampering: false,
     });
     const verified = await verifiedResponse.json();
     const blockedResponse = await post(baseUrl, {
-      question: 'What appears in the quoted segment?',
+      question: 'What does it mean for truth to spring from the earth?',
       simulateTampering: true,
     });
     const blocked = await blockedResponse.json();
 
     assert.equal(verifiedResponse.status, 200);
     assert.equal(verified.ok, true);
-    assert.equal(verified.exactQuotation, 'עֵץ 42?');
+    assert.equal(
+      verified.exactQuotation,
+      'Truth springeth out of the earth; And righteousness hath looked down from heaven.',
+    );
+    assert.equal(verified.sourceReference.reference, 'Psalms 85:12');
+    assert.equal(
+      verified.sourceReference.altReference,
+      'Psalm 85:11 (common Christian/KJV numbering)',
+    );
+    assert.equal(verified.sourceReference.license, 'Public Domain');
+    assert.equal(verified.sourceReference.provider, 'Sefaria');
     assert.equal(blockedResponse.status, 200);
     assert.equal(blocked.ok, false);
     assert.equal(blocked.verification.causeCode, 'QUOTATION_MISMATCH');
@@ -140,7 +151,7 @@ test('browser responses and static assets never include the server API key', asy
             text: JSON.stringify({
               interpretation: 'A safe interpretation.',
               support_status: 'supported',
-              citations: [{ reference_id: 'fixture-quoted-segment' }],
+              citations: [{ reference_id: 'jps-source-a' }],
             }),
           }],
         }],

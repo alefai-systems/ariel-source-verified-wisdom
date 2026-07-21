@@ -5,7 +5,7 @@ const { DEMO_MANIFEST } = require('./demo-manifest');
 
 const DEFAULT_MODEL = 'gpt-5.6-sol';
 const REASONING_EFFORT = 'low';
-const MAX_OUTPUT_TOKENS = 500;
+const MAX_OUTPUT_TOKENS = 2_000;
 const MAX_INTERPRETATION_LENGTH = 800;
 const ALLOWED_REFERENCE_IDS = Object.freeze(DEMO_MANIFEST.map((entry) => entry.referenceId));
 
@@ -106,12 +106,12 @@ function validateModelOutput(value, allowedReferenceIds) {
 function buildDeveloperPrompt(modelManifest) {
   return [
     'You are Ariel\'s bounded interpretation layer for a local source-verification demo.',
-    'Answer only from the synthetic manifest below.',
+    'Answer only from the two pinned public-domain JPS 1917 excerpts below.',
     'Return support_status="supported" with exactly one allowed reference_id when one listed range supports the interpretation.',
     'Otherwise return support_status="unsupported" with an empty citations array.',
     'Do not invent provenance, source identifiers, ranges, or quotations.',
     'Keep interpretation concise and do not present a verbatim quotation; the server reconstructs any quotation independently.',
-    'The fixture is synthetic test data and is not an authoritative wisdom source.',
+    'Sefaria supplied the digital text and edition metadata; it does not verify your interpretation.',
     `Allowed manifest: ${JSON.stringify(modelManifest)}`,
   ].join('\n');
 }

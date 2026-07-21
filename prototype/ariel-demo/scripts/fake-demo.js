@@ -11,7 +11,7 @@ function close(server) {
   });
 }
 
-async function post(baseUrl, simulateTampering) {
+async function post(baseUrl, question, simulateTampering) {
   const response = await fetch(`${baseUrl}/api/ask`, {
     method: 'POST',
     headers: {
@@ -19,7 +19,7 @@ async function post(baseUrl, simulateTampering) {
       Origin: baseUrl,
     },
     body: JSON.stringify({
-      question: 'What appears in the quoted segment of the synthetic Hebrew fixture?',
+      question,
       simulateTampering,
     }),
   });
@@ -34,16 +34,36 @@ async function main() {
   const baseUrl = `http://${LOCAL_HOST}:${address.port}`;
 
   try {
-    const verified = await post(baseUrl, false);
+    const verified = await post(
+      baseUrl,
+      'What does it mean for truth to spring from the earth?',
+      false,
+    );
     assert.equal(verified.ok, true);
-    assert.equal(verified.exactQuotation, 'עֵץ 42?');
+    assert.equal(
+      verified.exactQuotation,
+      'Truth springeth out of the earth; And righteousness hath looked down from heaven.',
+    );
+    assert.equal(verified.sourceReference.reference, 'Psalms 85:12');
 
-    const blocked = await post(baseUrl, true);
+    const proverb = await post(baseUrl, 'What does Proverbs say about a truthful lip?', false);
+    assert.equal(proverb.ok, true);
+    assert.equal(
+      proverb.exactQuotation,
+      'The lip of truth shall be established for ever; But a lying tongue is but for a moment.',
+    );
+
+    const blocked = await post(
+      baseUrl,
+      'What does it mean for truth to spring from the earth?',
+      true,
+    );
     assert.equal(blocked.ok, false);
     assert.equal(blocked.verification.causeCode, 'QUOTATION_MISMATCH');
     assert.equal(Object.hasOwn(blocked, 'exactQuotation'), false);
 
     console.log(`[fake-demo] verified reference=${verified.sourceReference.referenceId} quote=${verified.exactQuotation}`);
+    console.log(`[fake-demo] second-reference=${proverb.sourceReference.referenceId} quote=${proverb.exactQuotation}`);
     console.log(`[fake-demo] transparent-tampering blocked=${blocked.verification.code} cause=${blocked.verification.causeCode}`);
   } finally {
     await close(server);

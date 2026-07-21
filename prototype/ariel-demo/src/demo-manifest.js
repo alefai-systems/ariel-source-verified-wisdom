@@ -7,48 +7,76 @@ const {
   ImmutableSourceRegistry,
   verifyQuotation,
 } = require('../../source-verification/src');
-const { SOURCES } = require('../../source-verification/test/fixtures');
+const {
+  PINNED_JPS_1917_SOURCES,
+  findPinnedSegment,
+  findPinnedSource,
+} = require('./jps-1917-corpus');
 
-const DEMO_SOURCE = SOURCES.hebrew;
-const PINNED_CONTENT_HASH = 'fcfa677dfcfc2fba40060ed481414634c53f103714a09799397b081b5fa0acbc';
-const DEMO_REGISTRY = new ImmutableSourceRegistry([DEMO_SOURCE]);
+const PSALMS_SOURCE_ID = 'jps-1917-psalms-85-10-14';
+const PROVERBS_SOURCE_ID = 'jps-1917-proverbs-12-19';
+const PSALMS_SOURCE = findPinnedSource(PSALMS_SOURCE_ID);
+const PROVERBS_SOURCE = findPinnedSource(PROVERBS_SOURCE_ID);
+const DEMO_REGISTRY = new ImmutableSourceRegistry(PINNED_JPS_1917_SOURCES);
 
-function freezeReference(reference) {
+function freezeSegmentMetadata(source) {
+  return Object.freeze(source.segments.map((segment) => Object.freeze({
+    reference: segment.reference,
+    altReference: segment.altReference,
+    start: segment.start,
+    end: segment.end,
+    offsetUnit: segment.offsetUnit,
+  })));
+}
+
+function freezeReference({ referenceId, source, segmentReference, label, description }) {
+  const segment = findPinnedSegment(source, segmentReference);
+  if (!segment) {
+    throw new TypeError(`Pinned segment is unavailable: ${segmentReference}.`);
+  }
+
   return Object.freeze({
-    referenceId: reference.referenceId,
-    sourceId: DEMO_SOURCE.sourceId,
-    sourceVersion: DEMO_SOURCE.sourceVersion,
+    referenceId,
+    sourceId: source.sourceId,
+    sourceVersion: source.sourceVersion,
     hashAlgorithm: HASH_ALGORITHM,
-    contentHash: PINNED_CONTENT_HASH,
+    contentHash: source.sha256,
     offsetUnit: OFFSET_UNIT,
-    start: reference.start,
-    end: reference.end,
-    label: reference.label,
-    description: reference.description,
+    start: segment.start,
+    end: segment.end,
+    reference: segment.reference,
+    altReference: segment.altReference,
+    registeredSourceReference: source.reference,
+    versionTitle: source.versionTitle,
+    language: source.language,
+    license: source.license,
+    licenseNote: source.licenseNote,
+    provider: source.provider,
+    sourceUrl: source.sourceUrl,
+    retrievedAt: source.retrievedAt,
+    normalization: source.normalization,
+    sha256: source.sha256,
+    attribution: source.attribution,
+    segmentReferences: freezeSegmentMetadata(source),
+    label,
+    description,
   });
 }
 
 const DEMO_MANIFEST = Object.freeze([
   freezeReference({
-    referenceId: 'fixture-quoted-segment',
-    start: 15,
-    end: 25,
-    label: 'Quoted Hebrew segment',
-    description: 'The synthetic fixture segment inside Hebrew quotation marks.',
+    referenceId: 'jps-source-a',
+    source: PSALMS_SOURCE,
+    segmentReference: 'Psalms 85:12',
+    label: 'Truth and righteousness',
+    description: 'A public-domain JPS 1917 passage about truth emerging from earth and righteousness looking down from heaven.',
   }),
   freezeReference({
-    referenceId: 'fixture-rtl-suffix',
-    start: 44,
-    end: 47,
-    label: 'RTL suffix',
-    description: 'The three-letter ASCII suffix after the right-to-left mark.',
-  }),
-  freezeReference({
-    referenceId: 'fixture-full-source',
-    start: 0,
-    end: 47,
-    label: 'Complete synthetic fixture',
-    description: 'The complete synthetic Hebrew, niqqud, punctuation, number, and RTL fixture.',
+    referenceId: 'jps-source-b',
+    source: PROVERBS_SOURCE,
+    segmentReference: 'Proverbs 12:19',
+    label: 'Truthful speech',
+    description: 'A public-domain JPS 1917 proverb contrasting enduring truth with a momentary lying tongue.',
   }),
 ]);
 
@@ -106,13 +134,6 @@ function inspectManifest(manifest = DEMO_MANIFEST, registry = DEMO_REGISTRY) {
 
     modelEntries.push(Object.freeze({
       reference_id: reference.referenceId,
-      source_id: verification.evidence.sourceId,
-      source_version: verification.evidence.sourceVersion,
-      range: Object.freeze({
-        start: verification.evidence.range.start,
-        end: verification.evidence.range.end,
-        offset_unit: verification.evidence.range.offsetUnit,
-      }),
       label: reference.label,
       description: reference.description,
       excerpt: verification.evidence.extractedText,
@@ -132,8 +153,9 @@ function findReference(referenceId, manifest = DEMO_MANIFEST) {
 module.exports = Object.freeze({
   DEMO_MANIFEST,
   DEMO_REGISTRY,
-  DEMO_SOURCE,
-  PINNED_CONTENT_HASH,
+  PINNED_JPS_1917_SOURCES,
+  PROVERBS_SOURCE,
+  PSALMS_SOURCE,
   findReference,
   inspectManifest,
   reconstructSupport,

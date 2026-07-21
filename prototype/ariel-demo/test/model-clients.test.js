@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { inspectManifest } = require('../src/demo-manifest');
 const { ArielDemoError } = require('../src/errors');
+const { formatFailure } = require('../scripts/live-smoke');
 const {
   OpenAIResponsesClient,
   RESPONSES_ENDPOINT,
@@ -18,7 +19,7 @@ const {
 const structuredOutput = Object.freeze({
   interpretation: 'A concise interpretation.',
   support_status: 'supported',
-  citations: [Object.freeze({ reference_id: 'fixture-quoted-segment' })],
+  citations: [Object.freeze({ reference_id: 'jps-source-a' })],
 });
 const modelManifest = inspectManifest().modelEntries;
 
@@ -43,10 +44,11 @@ test('OpenAI client sends the bounded Responses API request exactly once', async
     },
   });
 
-  const output = await client.generate({ question: 'Inspect the fixture.', modelManifest });
+  const output = await client.generate({ question: 'Inspect the corpus.', modelManifest });
   const body = JSON.parse(captured.options.body);
 
-  assert.deepEqual(output, structuredOutput);
+  assert.equal(output.responseStatus, 'completed');
+  assert.deepEqual(output.modelOutput, structuredOutput);
   assert.equal(captured.url, RESPONSES_ENDPOINT);
   assert.equal(captured.options.method, 'POST');
   assert.equal(captured.options.headers.Authorization, `Bearer ${secret}`);
@@ -54,9 +56,14 @@ test('OpenAI client sends the bounded Responses API request exactly once', async
   assert.equal(body.store, false);
   assert.deepEqual(body.reasoning, { effort: REASONING_EFFORT });
   assert.equal(body.max_output_tokens, MAX_OUTPUT_TOKENS);
+  assert.equal(body.max_output_tokens, 2_000);
   assert.equal(body.text.format.type, 'json_schema');
   assert.equal(body.text.format.strict, true);
   assert.deepEqual(body.text.format.schema.properties.citations.items.properties.reference_id.enum, ALLOWED_REFERENCE_IDS);
+  assert.match(body.input[0].content[0].text, /JPS 1917/u);
+  assert.equal(body.input[0].content[0].text.includes('synthetic'), false);
+  assert.equal(body.input[0].content[0].text.includes('jps-1917-psalms-85-10-14'), false);
+  assert.equal(body.input[0].content[0].text.includes('sha256:'), false);
   assert.equal(JSON.stringify(body).includes(secret), false);
 });
 
@@ -111,10 +118,46 @@ test('incomplete response is rejected without parsing partial output', () => {
     () => parseResponsesPayload({
       status: 'incomplete',
       incomplete_details: { reason: 'max_output_tokens' },
-      output: [],
+      output: [{
+        type: 'message',
+        content: [{ type: 'output_text', text: JSON.stringify(structuredOutput) }],
+      }],
     }),
-    (error) => error.code === 'MODEL_INCOMPLETE',
+    (error) => (
+      error.code === 'MODEL_INCOMPLETE' &&
+      error.details.reason === 'max_output_tokens' &&
+      error.toPublicJSON().details.reason === 'max_output_tokens'
+    ),
   );
+});
+
+test('incomplete reason is reported exactly and safely by the live smoke formatter', () => {
+  const reason = 'max_output_tokens';
+  const error = new ArielDemoError('MODEL_INCOMPLETE', { reason });
+
+  assert.equal(
+    formatFailure(error),
+    '[live-smoke] failed code=MODEL_INCOMPLETE reason="max_output_tokens"',
+  );
+  assert.throws(
+    () => parseResponsesPayload({ status: 'incomplete', incomplete_details: {}, output: [] }),
+    (missingReason) => (
+      missingReason.code === 'MODEL_INCOMPLETE' && missingReason.details.reason === null
+    ),
+  );
+});
+
+test('every response status other than completed fails before output parsing', () => {
+  for (const status of ['queued', 'in_progress', 'failed', 'cancelled']) {
+    assert.throws(
+      () => parseResponsesPayload({
+        status,
+        output_text: JSON.stringify(structuredOutput),
+        output: [],
+      }),
+      (error) => error.code === 'MODEL_STATUS_NOT_COMPLETED',
+    );
+  }
 });
 
 test('code-fenced, empty, and multiple output blocks are malformed', () => {

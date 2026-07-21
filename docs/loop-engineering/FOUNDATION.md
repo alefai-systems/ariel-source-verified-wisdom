@@ -1,6 +1,6 @@
 # Loop Engineering foundation
 
-Status: deterministic source-verifier baseline plus an isolated local Ariel demo on the `feature/gpt-5.6-ariel-demo` branch. The original empty-workspace evidence from the first 2026-07-17 checkpoint is retained below.
+Status: deterministic source-verifier baseline plus an isolated local Ariel demo with a pinned public-domain JPS 1917 corpus on the `feature/gpt-5.6-ariel-demo` branch. The original empty-workspace evidence from the first 2026-07-17 checkpoint is retained below.
 
 ## Observed repository state
 
@@ -56,18 +56,23 @@ Validation on Node.js `v24.12.0` after independent review and correction:
 
 ## Local Ariel demonstration
 
-An explicitly authorized Build Week slice now lives at `prototype/ariel-demo`. It imports the existing verifier public API and the exact synthetic Hebrew/Unicode fixture without changing any file under `prototype/source-verification`.
+An explicitly authorized Build Week slice now lives at `prototype/ariel-demo`. It imports the existing verifier public API without changing any file under `prototype/source-verification`. Its demo-local corpus pins two exact Sefaria Texts v3 responses from **The Holy Scriptures: A New Translation (JPS 1917)**, returned with language `en` and license `Public Domain`.
 
 The demo is a standard-library-only CommonJS application with these boundaries:
 
 - A loopback-only HTTP server serves an allowlisted static UI and bounded JSON endpoints.
 - Fake mode is the default and cannot make an external request.
-- Optional live mode uses native `fetch` with the OpenAI Responses API, default model `gpt-5.6-sol`, strict `text.format` Structured Outputs, `store: false`, `reasoning.effort: low`, and a 500-token output bound.
+- Optional live mode uses native `fetch` with the OpenAI Responses API, default model `gpt-5.6-sol`, strict `text.format` Structured Outputs, `store: false`, `reasoning.effort: low`, and a 2,000-token output bound.
+- The live adapter requires `response.status === "completed"`; incomplete responses fail with only the exact `incomplete_details.reason` retained, and every other non-completed status fails before output parsing.
 - The model returns only an interpretation, support status, and one opaque manifest reference token. It cannot return the accepted quote, range, hash, path, endpoint, model name, or credential.
 - The server resolves the token to a pinned source/version/hash and predefined UTF-8 range, reconstructs exact text from the immutable registry, and publishes only successful Claim Gate evidence.
 - A labeled post-model tampering simulation proves that changed quotation evidence is blocked without claiming the model performed the attack.
 
-Offline implementation validation on 2026-07-21 reported 29 demo tests passed and 0 failed, plus a passing fake-model HTTP demonstration and browser checks of both verified and blocked states. No live request ran because `OPENAI_API_KEY` was absent. Semantic entailment and authoritative provenance remain explicit non-goals.
+The pinned Psalms 85:10-14 source is 399 UTF-8 bytes with SHA-256 `0391d2350d08cac6bb8e535451f59f4606e132782c94b41799ca83e8da54a312`. Its five verse ranges are derived by accumulating canonical segment byte lengths with one ASCII joining space; Psalm 85:12 resolves to `[165, 246)` and displays the alternate numbering `Psalm 85:11 (common Christian/KJV numbering)`. Proverbs 12:19 is an 87-byte second source with SHA-256 `1c577e59924bcad0b8b2b06016abc12d9e9ff3b841c463a1698ea551bdf70ed4` and range `[0, 87)`.
+
+The `ariel-sefaria-text-v1` pipeline decodes HTML entities; replaces `br` elements and line breaks with spaces; removes remaining tags; normalizes to NFC; trims; collapses internal whitespace; preserves capitalization/punctuation; encodes UTF-8; and hashes the final bytes. The snapshot fails closed on version, license, reference, segment, endpoint, warning, or hash drift. Sefaria supplies the digital text and edition metadata but does not verify the interpretation, and SHA-256 does not prove authority.
+
+Offline implementation validation on 2026-07-21 reported 43 demo tests passed and 0 failed, plus a passing two-source fake-model HTTP demonstration and desktop/390px browser checks of verified and blocked states with no console error. The OpenAI live smoke was deliberately not run. Semantic entailment and source authority remain explicit non-goals.
 
 ## Purpose
 
@@ -210,7 +215,7 @@ Reviewer independence requires access to primary source records, the actual diff
 | --- | --- | --- | --- |
 | Critical | The intended Ariel product/MVP checkout remains absent; the current Git repository contains only the verified prototypes | There is no product boundary or behavior to integrate with | Restore and map an explicitly authorized product checkout before any MVP integration |
 | Critical | Ariel MVP boundary is unavailable | Its files cannot be named or mechanically protected | Map and record exact protected paths before implementation |
-| High | The source registry is in-memory and ingestion is unauthenticated | SHA-256 proves self-consistency, not source provenance or durability | Define an authenticated durable adapter before production use |
+| High | The source registry is in-memory and the verified Sefaria snapshot was manually pinned | SHA-256 proves self-consistency, not source authority, authenticated provenance, or durability | Define an authenticated durable adapter with preserved raw-response evidence before production use |
 | High | UTF-8 behavior is implemented only in the isolated Node prototype | Other runtimes may use incompatible offsets or normalization | Require adapter conformance tests before any cross-runtime integration |
 | High | The prototype has a package manifest and test runner but no CI or product validation stack | Automated checks are local only | Integrate only after the product repository and native validation workflow are known |
 | High | The Ariel demo feature branch is local and intentionally unpushed during implementation | Remote review and CI do not yet cover this milestone | Push or open review only under a later explicit instruction after the local checkpoint is accepted |
@@ -220,9 +225,9 @@ Reviewer independence requires access to primary source records, the actual diff
 
 Before any production or Ariel integration:
 
-1. When an API key is intentionally provided, run the documented one-request live smoke test and record only sanitized results.
+1. When separately authorized and an API key is intentionally provided, run the documented one-request live smoke test; require `response.status === "completed"` and record only sanitized results or the exact incomplete reason.
 2. Complete the remaining executable conformance cases in `SOURCE_VERIFICATION_TEST_PLAN.md`, especially authoritative byte fixtures, non-BMP boundaries, duplicate occurrences, and property/mutation checks.
-3. Define an authenticated, licensed, versioned source-ingestion boundary before replacing the synthetic fixture.
+3. Define an authenticated, licensed, versioned source-ingestion boundary before expanding or refreshing the manually pinned JPS 1917 corpus.
 4. Add semantic-evaluation coverage before describing model interpretations as entailed by sources.
 5. When explicitly authorized and the intended product repository is present, map entry points, data flow, validation commands, and the exact Ariel MVP boundary.
 6. Reconcile the strict prototype identity rule with observed product semantics; document adapters or migrations rather than silently changing offsets.

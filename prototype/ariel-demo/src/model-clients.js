@@ -8,6 +8,13 @@ const RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
 const DEFAULT_TIMEOUT_MS = 20_000;
 const MAX_MODEL_OUTPUT_BYTES = 16 * 1024;
 
+function completedGeneration(modelOutput) {
+  return Object.freeze({
+    responseStatus: 'completed',
+    modelOutput,
+  });
+}
+
 class FakeModelClient {
   #resultFactory;
 
@@ -21,31 +28,31 @@ class FakeModelClient {
 
   async generate(context) {
     if (this.#resultFactory) {
-      return this.#resultFactory(context);
+      return completedGeneration(await this.#resultFactory(context));
     }
 
     const question = context.question.toLowerCase();
     if (/weather|stock|price|authoritative|provenance/u.test(question)) {
-      return {
-        interpretation: 'The bounded synthetic fixture does not support that question.',
+      return completedGeneration({
+        interpretation: 'The bounded JPS 1917 corpus does not support that question.',
         support_status: 'unsupported',
         citations: [],
-      };
+      });
     }
 
-    if (/rtl|suffix/u.test(question)) {
-      return {
-        interpretation: 'The fixture ends with a short left-to-right label after a right-to-left control mark.',
+    if (/lip|tongue|proverb|moment|established|speech/u.test(question)) {
+      return completedGeneration({
+        interpretation: 'Truthful speech is portrayed as enduring, while falsehood is temporary.',
         support_status: 'supported',
-        citations: [{ reference_id: 'fixture-rtl-suffix' }],
-      };
+        citations: [{ reference_id: 'jps-source-b' }],
+      });
     }
 
-    return {
-      interpretation: 'The synthetic quoted segment combines a Hebrew word with niqqud, the number 42, and a question mark.',
+    return completedGeneration({
+      interpretation: 'Truth is pictured as rising from the human world while righteousness answers from above.',
       support_status: 'supported',
-      citations: [{ reference_id: 'fixture-quoted-segment' }],
-    };
+      citations: [{ reference_id: 'jps-source-a' }],
+    });
   }
 }
 
@@ -129,9 +136,12 @@ function parseResponsesPayload(payload) {
   }
   if (payload.status !== 'completed') {
     if (payload.status === 'incomplete') {
-      throw new ArielDemoError('MODEL_INCOMPLETE');
+      const reason = payload.incomplete_details && typeof payload.incomplete_details.reason === 'string'
+        ? payload.incomplete_details.reason
+        : null;
+      throw new ArielDemoError('MODEL_INCOMPLETE', { reason });
     }
-    throw new ArielDemoError('MODEL_HTTP_ERROR');
+    throw new ArielDemoError('MODEL_STATUS_NOT_COMPLETED');
   }
   if (!Array.isArray(payload.output)) {
     throw new ArielDemoError('MODEL_RESPONSE_MALFORMED');
@@ -163,7 +173,7 @@ function parseResponsesPayload(payload) {
   }
 
   try {
-    return JSON.parse(outputTexts[0]);
+    return completedGeneration(JSON.parse(outputTexts[0]));
   } catch {
     throw new ArielDemoError('MODEL_RESPONSE_MALFORMED');
   }
@@ -175,5 +185,6 @@ module.exports = Object.freeze({
   MAX_MODEL_OUTPUT_BYTES,
   OpenAIResponsesClient,
   RESPONSES_ENDPOINT,
+  completedGeneration,
   parseResponsesPayload,
 });

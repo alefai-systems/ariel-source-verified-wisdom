@@ -37,6 +37,10 @@ const ERROR_DEFINITIONS = Object.freeze({
     status: 502,
     message: 'The model response was incomplete and no answer was accepted.',
   }),
+  MODEL_STATUS_NOT_COMPLETED: Object.freeze({
+    status: 502,
+    message: 'The model response did not complete and no answer was accepted.',
+  }),
   MODEL_RESPONSE_MALFORMED: Object.freeze({
     status: 502,
     message: 'The model response did not match the required structure.',
@@ -48,7 +52,7 @@ const ERROR_DEFINITIONS = Object.freeze({
 });
 
 class ArielDemoError extends Error {
-  constructor(code) {
+  constructor(code, details = null) {
     const definition = ERROR_DEFINITIONS[code];
     if (!definition) {
       throw new TypeError(`Unknown Ariel demo error code: ${code}`);
@@ -58,13 +62,22 @@ class ArielDemoError extends Error {
     this.name = 'ArielDemoError';
     this.code = code;
     this.httpStatus = definition.status;
+    this.details = code === 'MODEL_INCOMPLETE'
+      ? Object.freeze({
+        reason: details && typeof details.reason === 'string' ? details.reason : null,
+      })
+      : null;
   }
 
   toPublicJSON() {
-    return Object.freeze({
+    const payload = {
       code: this.code,
       message: this.message,
-    });
+    };
+    if (this.details) {
+      payload.details = this.details;
+    }
+    return Object.freeze(payload);
   }
 }
 

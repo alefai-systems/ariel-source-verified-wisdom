@@ -24,11 +24,15 @@ function normalizeQuestion(question) {
   return normalized;
 }
 
-function safeModelMetadata(modelClient) {
-  return Object.freeze({
+function safeModelMetadata(modelClient, responseStatus = null) {
+  const metadata = {
     provider: typeof modelClient.provider === 'string' ? modelClient.provider : 'unknown',
     model: typeof modelClient.model === 'string' ? modelClient.model : 'unknown',
-  });
+  };
+  if (responseStatus !== null) {
+    metadata.responseStatus = responseStatus;
+  }
+  return Object.freeze(metadata);
 }
 
 function publicReference(reference) {
@@ -39,6 +43,20 @@ function publicReference(reference) {
     referenceId: reference.referenceId,
     sourceId: reference.sourceId,
     sourceVersion: reference.sourceVersion,
+    reference: reference.reference,
+    altReference: reference.altReference,
+    registeredSourceReference: reference.registeredSourceReference,
+    versionTitle: reference.versionTitle,
+    language: reference.language,
+    license: reference.license,
+    licenseNote: reference.licenseNote,
+    provider: reference.provider,
+    sourceUrl: reference.sourceUrl,
+    retrievedAt: reference.retrievedAt,
+    normalization: reference.normalization,
+    sha256: reference.sha256,
+    attribution: reference.attribution,
+    segmentReferences: reference.segmentReferences,
     label: reference.label,
     range: Object.freeze({
       start: reference.start,
@@ -86,14 +104,16 @@ class ArielService {
     return Object.freeze({
       ...safeModelMetadata(this.#modelClient),
       liveConfigured: this.#modelClient.liveConfigured === true,
-      sourceCount: 1,
+      sourceCount: this.#registry && Number.isSafeInteger(this.#registry.size)
+        ? this.#registry.size
+        : 0,
       referenceCount: this.#manifest.length,
     });
   }
 
   async ask(question, { simulateTampering = false } = {}) {
     const safeQuestion = normalizeQuestion(question);
-    const model = safeModelMetadata(this.#modelClient);
+    let model = safeModelMetadata(this.#modelClient);
     const manifestInspection = inspectManifest(this.#manifest, this.#registry);
 
     if (!manifestInspection.ok) {
@@ -104,12 +124,21 @@ class ArielService {
       });
     }
 
-    const rawModelOutput = await this.#modelClient.generate({
+    const generation = await this.#modelClient.generate({
       question: safeQuestion,
       modelManifest: manifestInspection.modelEntries,
     });
+    if (
+      !generation ||
+      typeof generation !== 'object' ||
+      generation.responseStatus !== 'completed' ||
+      !Object.hasOwn(generation, 'modelOutput')
+    ) {
+      throw new ArielDemoError('MODEL_STATUS_NOT_COMPLETED');
+    }
+    model = safeModelMetadata(this.#modelClient, generation.responseStatus);
     const allowedReferenceIds = new Set(this.#manifest.map((entry) => entry.referenceId));
-    const modelOutput = validateModelOutput(rawModelOutput, allowedReferenceIds);
+    const modelOutput = validateModelOutput(generation.modelOutput, allowedReferenceIds);
 
     if (modelOutput.support_status === 'unsupported') {
       return blockedResult({ model, code: 'UNSUPPORTED_CLAIM' });
@@ -157,8 +186,8 @@ class ArielService {
         }),
         simulatedTampering: false,
       }),
-      provenance: 'Synthetic Hebrew/Unicode test fixture; no authoritative provenance is claimed.',
-      limitation: 'Exact source support is verified; semantic entailment of the model interpretation is not.',
+      provenance: reference.attribution,
+      limitation: 'Claim Gate verifies the pinned identity, bytes, range, and quotation only. It does not establish semantic entailment or source authority; Sefaria does not verify the interpretation, and SHA-256 only detects byte changes.',
     });
   }
 }

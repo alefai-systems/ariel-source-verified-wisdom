@@ -33,15 +33,15 @@
       <section class="ask-card" aria-labelledby="ask-heading">
         <div class="card-heading">
           <div>
-            <p class="step-label">Ask the bounded fixture</p>
+            <p class="step-label">Ask the bounded corpus</p>
             <h2 id="ask-heading">What would you like to inspect?</h2>
           </div>
-          <span class="fixture-chip">Synthetic fixture</span>
+          <span class="fixture-chip">JPS 1917 · Public Domain</span>
         </div>
 
         <form id="ask-form">
           <label for="question">Question</label>
-          <textarea id="question" name="question" maxlength="1000" rows="3" required>What appears in the quoted segment of the synthetic Hebrew fixture?</textarea>
+          <textarea id="question" name="question" maxlength="1000" rows="3" required>What does it mean for truth to spring from the earth?</textarea>
 
           <div class="form-actions">
             <label class="attack-toggle" for="simulate-tampering">
@@ -81,8 +81,24 @@
             <blockquote id="exact-quotation" dir="auto">—</blockquote>
             <dl class="evidence-list">
               <div>
-                <dt>Selected reference</dt>
+                <dt>Canonical reference</dt>
                 <dd id="source-reference">—</dd>
+              </div>
+              <div>
+                <dt>Alternate numbering</dt>
+                <dd id="alternate-reference">—</dd>
+              </div>
+              <div>
+                <dt>Version</dt>
+                <dd id="version-title">—</dd>
+              </div>
+              <div>
+                <dt>License</dt>
+                <dd id="source-license">—</dd>
+              </div>
+              <div>
+                <dt>Provider</dt>
+                <dd id="source-provider">—</dd>
               </div>
               <div>
                 <dt>Integrity</dt>
@@ -108,13 +124,13 @@
 
       <aside class="truth-note">
         <strong>What “verified” means here</strong>
-        <p>Exact source identity, integrity, range, and quotation are verified. Semantic entailment and authoritative provenance are intentionally out of scope for this first synthetic demo.</p>
+        <p>Exact source identity, integrity, range, and quotation are verified against the pinned local corpus. Semantic entailment and source authority are not: Sefaria supplies text and edition metadata, while SHA-256 detects byte changes.</p>
       </aside>
     </main>
 
     <footer>
       <span>Ariel · local-only engineering demonstration</span>
-      <span>No source upload · no browser-held API key</span>
+      <span>Public-domain JPS 1917 text via Sefaria · no browser-held API key</span>
     </footer>
   </div>
   <script src="/app.js" defer></script>
