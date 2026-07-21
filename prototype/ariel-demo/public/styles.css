@@ -61,16 +61,11 @@ textarea {
 }
 
 .brand-mark {
-  display: grid;
+  display: block;
+  flex: 0 0 46px;
   width: 46px;
   height: 46px;
-  place-items: center;
-  border-radius: 14px;
-  color: #fffdf6;
-  background: var(--navy);
-  box-shadow: 0 8px 20px rgba(23, 58, 67, 0.22);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.6rem;
+  object-fit: contain;
 }
 
 .brand strong,

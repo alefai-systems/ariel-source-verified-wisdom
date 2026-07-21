@@ -15,6 +15,7 @@ const PUBLIC_DIRECTORY = path.join(__dirname, '..', 'public');
 const STATIC_ROUTES = Object.freeze({
   '/': Object.freeze({ file: 'index.html', type: 'text/html; charset=utf-8' }),
   '/app.js': Object.freeze({ file: 'app.js', type: 'text/javascript; charset=utf-8' }),
+  '/assets/ariel-lion.png': Object.freeze({ file: 'assets/ariel-lion.png', type: 'image/png' }),
   '/styles.css': Object.freeze({ file: 'styles.css', type: 'text/css; charset=utf-8' }),
 });
 

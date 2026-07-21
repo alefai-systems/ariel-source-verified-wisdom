@@ -48,6 +48,8 @@ test('server exposes only safe local runtime metadata and static UI', async () =
     const status = await statusResponse.json();
     const pageResponse = await fetch(baseUrl);
     const page = await pageResponse.text();
+    const logoResponse = await fetch(`${baseUrl}/assets/ariel-lion.png`);
+    const logo = Buffer.from(await logoResponse.arrayBuffer());
 
     assert.equal(statusResponse.status, 200);
     assert.deepEqual(status, {
@@ -61,12 +63,16 @@ test('server exposes only safe local runtime metadata and static UI', async () =
     assert.equal(pageResponse.status, 200);
     assert.match(page, /Ariel: Source-Verified Wisdom/u);
     assert.match(page, /JPS 1917/u);
+    assert.match(page, /src="\/assets\/ariel-lion\.png" alt="Ariel lion logo"/u);
     assert.match(page, /Model-generated interpretation/u);
     assert.match(page, /Deterministically verified quotation/u);
     assert.match(
       page,
       /The quotation is deterministically verified\. The interpretation is model-generated and is not semantically verified\./u,
     );
+    assert.equal(logoResponse.status, 200);
+    assert.equal(logoResponse.headers.get('content-type'), 'image/png');
+    assert.deepEqual([...logo.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
     assert.match(pageResponse.headers.get('content-security-policy'), /default-src 'self'/u);
   });
 });
