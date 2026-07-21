@@ -205,9 +205,26 @@ node .\scripts\fake-demo.js
 
 No lint, typecheck, or build script is defined in either package. Those checks are unavailable rather than claimed as passing.
 
-## Optional live smoke test
+## Live smoke validation
 
-The live smoke was deliberately not run in this checkpoint. When separately authorized, keep the key process-local:
+On 2026-07-21, the project owner successfully ran `prototype/ariel-demo/scripts/live-smoke.js` against OpenAI with model `gpt-5.6-sol`. The key was supplied only through a process-scoped environment variable and removed after the test. No API key, secret value, or OpenAI response message ID is stored in this repository or recorded here.
+
+The sanitized observed result was:
+
+- Responses API status: `completed`.
+- Ariel outcome: `verified`.
+- GPT selected an opaque allowed reference, which the server resolved to `Psalms 85:12` in the registered `Psalms 85:10-14` source.
+- Version: **The Holy Scriptures: A New Translation (JPS 1917)**; digital text provider: Sefaria; recorded license: **Public Domain**.
+- SHA-256 integrity and the registry's zero-based, end-exclusive UTF-8 byte range both passed.
+- The final quotation was reconstructed from the immutable registry:
+
+> Truth springeth out of the earth; And righteousness hath looked down from heaven.
+
+- Model-generated interpretation: “It portrays truth as emerging or arising from the earth; the passage does not specify a further meaning.”
+
+The quotation was deterministically verified. The interpretation remained model-generated and was not semantically verified. Neither Sefaria, SHA-256, nor the deterministic verifier validated the interpretation.
+
+For any separately authorized rerun, keep the key process-local:
 
 ```powershell
 cd C:\Projects\tree-a\prototype\ariel-demo
@@ -226,22 +243,22 @@ The command succeeds only for an accepted Claim Gate result backed by an OpenAI 
 
 ## Current verified results
 
-Verified locally on 2026-07-21 without an OpenAI request:
+Verified on 2026-07-21. The release-gate commands were run without making another OpenAI request:
 
 - Existing source verifier: 51 tests passed, 0 failed.
 - Existing source-verifier CLI: exit 0 with all documented success/rejection demonstrations passing.
-- Ariel demo: 43 tests passed, 0 failed.
+- Ariel demo: 44 tests passed, 0 failed.
 - Fake-model HTTP demo: both Psalm 85:12 and Proverbs 12:19 verified; post-model tampering blocked as `CLAIM_SUPPORT_INVALID` caused by `QUOTATION_MISMATCH`.
 - Browser: desktop and 390px layouts rendered without horizontal overflow; verified and blocked paths displayed the required metadata; no console warning/error was present.
 - Independent Sefaria provenance reproduction: passed for version, language, license, reference, completeness, canonical text, ranges, and hashes.
-- OpenAI live smoke: not run, as explicitly required.
+- Owner-supplied OpenAI live smoke: `gpt-5.6-sol`, response status `completed`, Ariel outcome `verified`, opaque reference resolved to Psalms 85:12, immutable-registry quotation and integrity/range checks passed.
 - Runtime and development dependencies: 0.
 
 ## Security and truthfulness properties
 
 - The server binds to `127.0.0.1` and serves only allowlisted static routes and JSON endpoints.
 - Live/fake mode, model, endpoint, and API key are server startup configuration, never browser-controlled input.
-- The API key is held in a private server field and never added to prompts, responses, assets, or logs.
+- The API key is held in a private server field and never added to prompts, responses, assets, or logs. The successful live validation used a process-scoped key that was removed after the test; no key is stored in the repository.
 - The source snapshot fails closed on version selector, title, language, license, endpoint, reference, segment order/completeness, warning, or byte/hash drift.
 - Model output keys and reference tokens are allowlisted; source metadata cannot be supplied by the model.
 - POST requests must name the actual loopback socket and port; cross-origin and matching non-loopback Host/Origin requests are rejected.
@@ -274,14 +291,15 @@ This milestone replaces the synthetic demo fixture with a small, reproducible pu
 
 ## Known limitations
 
-- The corpus contains only two predefined quotation options from one retrieved JPS 1917 snapshot.
+- The demo corpus is bounded to two predefined quotation options from one retrieved JPS 1917 snapshot.
 - The source snapshot was manually pinned from verified Sefaria API responses; there is no authenticated or durable ingestion pipeline.
-- SHA-256 proves consistency with the locally pinned bytes, not authority, continuing upstream availability, legal advice, truth, or semantic entailment.
+- SHA-256 proves consistency with the locally pinned bytes, not source authority, continuing upstream availability, legal advice, truth, or semantic entailment.
 - Sefaria provides text and version/license metadata but does not verify the model interpretation.
-- Sources and evidence are in-memory; nothing is persisted across restarts.
-- There is no authentication, authorization, rate limiting, CI, telemetry, deployment configuration, or production adapter.
-- The live OpenAI path is fully mocked in tests but has not been exercised against the API in this checkpoint.
-- The demo supports one citation per answer and does not implement semantic entailment.
+- The demo has no deterministic semantic-entailment proof; prompt constraints and one successful live response do not establish semantic correctness.
+- Sources and evidence are in memory; nothing is persisted across restarts.
+- There is no production authentication, authorization, TLS termination, rate limiting, telemetry, or production deployment. The server remains a loopback-only demonstration.
+- The live OpenAI path has one successful owner-supplied validation, not production reliability, security, availability, or monitoring evidence.
+- The demo supports one citation per answer and is not production-ready.
 
 ## License status
 
