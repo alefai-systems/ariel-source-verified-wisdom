@@ -61,6 +61,12 @@ test('server exposes only safe local runtime metadata and static UI', async () =
     assert.equal(pageResponse.status, 200);
     assert.match(page, /Ariel: Source-Verified Wisdom/u);
     assert.match(page, /JPS 1917/u);
+    assert.match(page, /Model-generated interpretation/u);
+    assert.match(page, /Deterministically verified quotation/u);
+    assert.match(
+      page,
+      /The quotation is deterministically verified\. The interpretation is model-generated and is not semantically verified\./u,
+    );
     assert.match(pageResponse.headers.get('content-security-policy'), /default-src 'self'/u);
   });
 });

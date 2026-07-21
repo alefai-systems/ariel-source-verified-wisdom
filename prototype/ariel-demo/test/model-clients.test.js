@@ -14,6 +14,7 @@ const {
   ALLOWED_REFERENCE_IDS,
   MAX_OUTPUT_TOKENS,
   REASONING_EFFORT,
+  buildResponsesRequest,
 } = require('../src/model-contract');
 
 const structuredOutput = Object.freeze({
@@ -65,6 +66,31 @@ test('OpenAI client sends the bounded Responses API request exactly once', async
   assert.equal(body.input[0].content[0].text.includes('jps-1917-psalms-85-10-14'), false);
   assert.equal(body.input[0].content[0].text.includes('sha256:'), false);
   assert.equal(JSON.stringify(body).includes(secret), false);
+});
+
+test('OpenAI request requires a concise interpretation grounded only in verified quotation wording', () => {
+  const request = buildResponsesRequest({
+    question: 'Inspect the corpus.',
+    modelManifest,
+  });
+  const prompt = request.input[0].content[0].text;
+
+  const requiredInstructions = [
+    'Keep the interpretation strictly grounded in the wording of the selected verified quotation.',
+    'Do not add historical, theological, psychological, philosophical, political, scientific, or cultural claims that are not directly supported by the quotation\'s wording.',
+    'Do not present an inference as a verified fact.',
+    'When an inference is unavoidable, explicitly identify it as an interpretation.',
+    'Prefer a close paraphrase of the quotation over an expansive explanation.',
+    'Keep the interpretation concise, ideally one or two sentences.',
+    'Do not quote source text from memory or from model output.',
+    'Do not claim semantic entailment has been verified.',
+    'Do not claim that Sefaria, SHA-256, or the deterministic verifier validates the interpretation.',
+    'The final verified quotation comes only from the immutable registry; never supply it yourself.',
+  ];
+
+  for (const instruction of requiredInstructions) {
+    assert.equal(prompt.includes(instruction), true, `missing instruction: ${instruction}`);
+  }
 });
 
 test('OPENAI_MODEL-style constructor override changes only the server request model', async () => {
