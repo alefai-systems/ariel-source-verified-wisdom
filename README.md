@@ -1,5 +1,11 @@
 # Ariel: Source-Verified Wisdom
 
+## 🎥 Demo
+
+**Watch the video:** https://youtu.be/HiJKXAAFoeI
+
+Submitted to [OpenAI Build Week](https://openai.devpost.com/) — July 2026.
+
 Ariel is a local demonstration of one narrow trust rule: a language model may interpret pinned source material and select an allowed reference, but it must not control the quotation ultimately shown to a user. The final quotation is reconstructed from immutable registered text and released only after deterministic source identity, SHA-256, UTF-8 range, and exact-text checks pass.
 
 This repository is an OpenAI Build Week prototype. It is not deployed and does not contain a production Ariel MVP.
