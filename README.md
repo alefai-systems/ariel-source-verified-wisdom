@@ -10,6 +10,30 @@ Ariel is a local demonstration of one narrow trust rule: a language model may in
 
 This repository is an OpenAI Build Week prototype. It is not deployed and does not contain a production Ariel MVP.
 
+Large language models can produce plausible but inexact quotations. Ariel separates model interpretation from displayed evidence. The model may return an interpretation, support status, and an allowlisted opaque reference. Displayed quotations are reconstructed only from the pinned, SHA-256-verified registry and are blocked if deterministic verification fails.
+
+## Open-source relevance
+
+Ariel is a reusable architectural pattern for systems where exact source attribution matters: model interpretation remains separate from source evidence, and displayed quotations are released only after deterministic verification. The pattern may be generalized to other domains, but this prototype is not ready for legal, medical, or production use.
+
+## Quick start
+
+Run these commands from the repository root in PowerShell. Node.js and npm are required. Both packages use only Node.js built-ins and native `fetch`.
+
+There is no dependency installation step. Do not run `npm install`.
+
+Run the two test suites and offline demos from the repository root:
+
+```powershell
+cd prototype\source-verification
+npm test
+node .\cli\demo.js
+
+cd ..\ariel-demo
+npm test
+node .\scripts\fake-demo.js
+```
+
 ## What is implemented
 
 Two dependency-free Node.js prototypes work together:
@@ -186,26 +210,26 @@ There is no dependency installation step. Do not run `npm install`.
 
 `.env.example` documents supported variables, but the application does not load `.env` files. Set variables only in the server process environment.
 
-## Run the local web demo
+### Run the local web demo
 
 Fake mode is the default and makes no external request:
 
 ```powershell
-cd C:\Projects\tree-a\prototype\ariel-demo
+cd prototype\ariel-demo
 node .\src\server.js
 ```
 
 Open `http://127.0.0.1:3000`. Check **Simulate post-model tampering** to see application-injected evidence alteration blocked by Claim Gate. The model does not perform that simulated attack.
 
-## Run all offline verification
+### Run all offline verification
 
 ```powershell
-cd C:\Projects\tree-a\prototype\source-verification
-node --test
+cd prototype\source-verification
+npm test
 node .\cli\demo.js
 
-cd C:\Projects\tree-a\prototype\ariel-demo
-node --test
+cd ..\ariel-demo
+npm test
 node .\scripts\fake-demo.js
 ```
 
@@ -233,7 +257,7 @@ The quotation was deterministically verified. The interpretation remained model-
 For any separately authorized rerun, keep the key process-local:
 
 ```powershell
-cd C:\Projects\tree-a\prototype\ariel-demo
+cd prototype\ariel-demo
 $env:OPENAI_API_KEY = Read-Host "OpenAI API key" -MaskInput
 $env:OPENAI_MODEL = "gpt-5.6-sol"
 try {
@@ -307,6 +331,12 @@ This milestone replaces the synthetic demo fixture with a small, reproducible pu
 - The live OpenAI path has one successful owner-supplied validation, not production reliability, security, availability, or monitoring evidence.
 - The demo supports one citation per answer and is not production-ready.
 
-## License status
+## Contributing
 
-The two stored JPS 1917 source passages are recorded by Sefaria as **Public Domain**. No license has been selected or added for the repository's code and documentation; do not assume the repository itself grants permission to use, modify, or redistribute them.
+Focused issues and pull requests are welcome. Contributions must preserve fail-closed behavior, separation between model output and source evidence, deterministic verification, and truthful test and security claims.
+
+## License
+
+Repository code and documentation are licensed under MIT; see [LICENSE](LICENSE).
+
+The included JPS 1917 source text is **Public Domain**. Digital text and edition metadata were obtained through Sefaria. Sefaria does not endorse or verify Ariel's interpretations.
